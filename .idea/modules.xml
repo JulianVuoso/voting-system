@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/api/tpe1-g6-api.iml" filepath="$PROJECT_DIR$/api/tpe1-g6-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/client/tpe1-g6-client.iml" filepath="$PROJECT_DIR$/client/tpe1-g6-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tpe1-g6-parent.iml" filepath="$PROJECT_DIR$/tpe1-g6-parent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/server/tpe1-g6-server.iml" filepath="$PROJECT_DIR$/server/tpe1-g6-server.iml" />
+    </modules>
+  </component>
+</project>
