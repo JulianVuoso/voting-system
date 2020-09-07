@@ -2,36 +2,36 @@ package ar.edu.itba.pod.tpe.server;
 
 import ar.edu.itba.pod.tpe.exceptions.AdministrationException;
 import ar.edu.itba.pod.tpe.interfaces.AdministrationService;
-import ar.edu.itba.pod.tpe.models.PollStatus;
+import ar.edu.itba.pod.tpe.models.Status;
 
 import java.rmi.RemoteException;
 
 public class AdministrationServiceImpl implements AdministrationService {
 
-    private PollStatus pollStatus;
+    private Status status;
 
     public AdministrationServiceImpl() {
-        pollStatus = PollStatus.UNDEFINED;
+        status = Status.UNDEFINED;
     }
 
     @Override
     public void open() throws RemoteException, AdministrationException {
-        switch (pollStatus) {
+        switch (status) {
             case CLOSE: throw new AdministrationException("The poll is already closed");
-            default: pollStatus = PollStatus.OPEN;
+            default: status = Status.OPEN;
         }
     }
 
     @Override
     public void close() throws RemoteException, AdministrationException {
-        switch (pollStatus) {
+        switch (status) {
             case UNDEFINED: throw new AdministrationException("The poll has not been opened yet");
-            default: pollStatus = PollStatus.CLOSE;
+            default: status = Status.CLOSE;
         }
     }
 
     @Override
-    public PollStatus status() throws RemoteException {
-        return pollStatus;
+    public Status status() throws RemoteException {
+        return status;
     }
 }
