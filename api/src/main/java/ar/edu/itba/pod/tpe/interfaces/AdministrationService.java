@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.tpe.interfaces;
 
 import ar.edu.itba.pod.tpe.exceptions.AdministrationException;
+import ar.edu.itba.pod.tpe.models.PollStatus;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -25,5 +26,5 @@ public interface AdministrationService extends Remote {
      * Returns the status of the poll, not started, started, and finished.
      * @throws RemoteException
      */
-    String status() throws RemoteException;
+    PollStatus status() throws RemoteException;
 }

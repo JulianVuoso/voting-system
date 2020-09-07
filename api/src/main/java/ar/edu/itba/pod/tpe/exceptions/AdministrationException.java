@@ -8,10 +8,6 @@ public class AdministrationException extends Exception {
         super();
     }
 
-    public AdministrationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
     public AdministrationException(String message, Throwable cause) {
         super(message, cause);
     }
