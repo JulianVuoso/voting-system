@@ -18,6 +18,7 @@ public class AdministrationServiceImpl implements AdministrationService {
     public Status open() throws RemoteException, AdministrationException {
         switch (status) {
             case CLOSE: throw new AdministrationException("the poll is already closed");
+            case OPEN: throw new AdministrationException("the poll is already open");
             default: status = Status.OPEN;
         }
         return Status.STARTED;
@@ -27,6 +28,7 @@ public class AdministrationServiceImpl implements AdministrationService {
     public Status close() throws RemoteException, AdministrationException {
         switch (status) {
             case UNDEFINED: throw new AdministrationException("the poll has not been opened yet");
+            case CLOSE: throw new AdministrationException("the poll is already close");
             default: status = Status.CLOSE;
         }
         return Status.ENDED;
