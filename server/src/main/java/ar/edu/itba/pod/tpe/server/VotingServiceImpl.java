@@ -18,7 +18,8 @@ public class VotingServiceImpl implements VotingService {
 
     @Override
     public void vote(Vote vote) throws RemoteException {
-        /* TODO: Check Syncro */
+        /* TODO: Check Syncro
+        *   TODO2: Check si ya estan abiertos los comicios */
         String state = vote.getState();
         Integer table = vote.getTable();
         synchronized (voteLock){

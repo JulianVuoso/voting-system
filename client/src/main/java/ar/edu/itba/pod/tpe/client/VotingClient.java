@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.rmi.NotBoundException;
@@ -17,22 +19,37 @@ import java.rmi.registry.Registry;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public class VotingClient {
     private static Logger logger = LoggerFactory.getLogger(VotingClient.class);
+    private static final int ERROR_STATUS = 1;
+
+    private static final String SERVER_ADDRESS_PARAM = "serverAddress";
+    private static final String FILE_PATH_PARAM = "votesPath";
+
+    private static final String VOTING_SERVICE_NAME = "voting-service";
+
+    private static InetSocketAddress serverAddress;
+    private static String path;
 
 
     public static void main(String[] args) throws RemoteException, NotBoundException {
-       /* TODO: Cuando juntemos todo en un solo service
-                chequear si ya estan abiertos los comicios => sino ERROR */
         logger.info("tpe1-g6 Voting Client Starting ...");
 
-        /* TODO: recibir IP - puerto - csv por linea de comandos */
-        final Registry registry = LocateRegistry.getRegistry("127.0.0.1", 1099);
-        final VotingService service = (VotingService) registry.lookup("voting-service");
+        try {
+            argumentParsing(args);
+        } catch (ArgumentException e) {
+            System.err.println(e.getMessage());
+            System.exit(ERROR_STATUS);
+            return;
+        }
+
+        final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
+        final VotingService service = (VotingService) registry.lookup(VOTING_SERVICE_NAME);
 
         try {
-            List<String> file = Files.readAllLines(Paths.get("/Users/nicolas/Downloads/test.csv") );
+            List<String> file = Files.readAllLines(Paths.get(path) );
             parseFile(file, service);
         }
         catch (IOException e){
@@ -68,6 +85,30 @@ public class VotingClient {
             votes.put(v[0],Integer.valueOf(v[1]));
         }
         return votes;
+    }
+
+
+    private static void argumentParsing(String[] args) throws ArgumentException {
+        // -DserverAddress=xx.xx.xx.xx:yyyy        --> host:port
+        // -DvotesPath=fileName                    --> file.csv
+
+        Properties properties;
+        try {
+            properties = ClientUtils.getDProperties(args);
+        } catch (ParseException e) {
+            throw new ArgumentException("Params format must be -Dproperty=value");
+        }
+
+        try {
+            serverAddress = ClientUtils.getInetAddress(properties.getProperty(SERVER_ADDRESS_PARAM));
+        } catch (URISyntaxException e) {
+            throw new ArgumentException("Server Address must be supplied using -DserverAddress and its format must be xx.xx.xx.xx:yyyy");
+        }
+
+        path = properties.getProperty(FILE_PATH_PARAM);
+        if (path == null) {
+            throw new ArgumentException("Path must be supplied using -DvotesPath");
+        }
     }
 
 
