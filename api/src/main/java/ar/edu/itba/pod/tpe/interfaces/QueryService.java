@@ -1,7 +1,8 @@
 package ar.edu.itba.pod.tpe.interfaces;
 
 import ar.edu.itba.pod.tpe.exceptions.QueryException;
-import com.sun.jndi.cosnaming.RemoteToCorba;
+import ar.edu.itba.pod.tpe.models.Result;
+import ar.edu.itba.pod.tpe.models.Vote;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -16,12 +17,12 @@ public interface QueryService extends Remote {
      * @throws QueryException if ask with polls closed.
      * @throws RemoteException if any communication error occurs.
      */
-    void ask_national() throws RemoteException, QueryException;
-    void ask_provincial(String state) throws RemoteException, QueryException;
-    void ask_table(Integer table) throws RemoteException, QueryException;
+    Result askNational() throws RemoteException, QueryException;
+    Result askState(String state) throws RemoteException, QueryException;
+    Result askTable(Integer table) throws RemoteException, QueryException;
+    void vote(Vote vote);
 }
 
 /*
 Cliente sólo pregunta lo que quiere e imprime en pantalla el resultado + exporta csv con resultados de la consulta.
-
 * */
