@@ -1,8 +1,11 @@
 package ar.edu.itba.pod.tpe.client;
 
 
-import ar.edu.itba.pod.tpe.Vote;
-import ar.edu.itba.pod.tpe.VotingService;
+import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
+import ar.edu.itba.pod.tpe.stub.Vote;
+import ar.edu.itba.pod.tpe.interfaces.VotingService;
+import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
+import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +31,13 @@ public class VotingClient {
     private static final String SERVER_ADDRESS_PARAM = "serverAddress";
     private static final String FILE_PATH_PARAM = "votesPath";
 
-    private static final String VOTING_SERVICE_NAME = "voting-service";
+    private static final String VOTING_SERVICE_NAME = "service";
 
     private static InetSocketAddress serverAddress;
     private static String path;
 
 
-    public static void main(String[] args) throws RemoteException, NotBoundException {
+    public static void main(String[] args) throws RemoteException, NotBoundException, IllegalElectionStateException {
         logger.info("tpe1-g6 Voting Client Starting ...");
 
         try {
@@ -52,7 +55,7 @@ public class VotingClient {
             List<String> file = Files.readAllLines(Paths.get(path) );
             parseFile(file, service);
         }
-        catch (IOException e){
+        catch (IOException e ){
             e.printStackTrace();
         }
 
@@ -63,7 +66,7 @@ public class VotingClient {
      *   1001;JUNGLE;LYNX|1,TIGER|1,LEOPARD|2;LYNX
      *   1002;SAVANNAH;TIGER|3,LYNX|3,OWL|3,BUFFALO|5;BUFFALO
      **/
-    private static void parseFile(List<String> file, VotingService service) throws RemoteException{
+    private static void parseFile(List<String> file, VotingService service) throws RemoteException, IllegalElectionStateException {
         for(String line : file ){
             String[] parse = line.split(";");
             Map<String, Integer> votes = parseVotes(parse[2]);

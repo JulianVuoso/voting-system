@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.tpe;
+package ar.edu.itba.pod.tpe.stub;
 
 import java.io.Serializable;
 import java.util.HashMap;

@@ -1,6 +1,6 @@
-package ar.edu.itba.pod.tpe.server;
+package ar.edu.itba.pod.tpe.server.deprecated;
 
-import ar.edu.itba.pod.tpe.VotingService;
+import ar.edu.itba.pod.tpe.interfaces.VotingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -5,9 +5,11 @@ import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
 import ar.edu.itba.pod.tpe.interfaces.ManagementService;
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.VoteAvailableCallbackHandler;
+import ar.edu.itba.pod.tpe.interfaces.VotingService;
 import ar.edu.itba.pod.tpe.models.Status;
 import ar.edu.itba.pod.tpe.server.utils.Pair;
 import ar.edu.itba.pod.tpe.stub.InspectionVote;
+import ar.edu.itba.pod.tpe.stub.Vote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,16 +18,20 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ElectionServiceImpl implements ManagementService, InspectionService {
+public class ElectionServiceImpl implements ManagementService,
+                                            InspectionService,
+                                                VotingService {
+
     private static Logger logger = LoggerFactory.getLogger(ElectionServiceImpl.class);
 
-
     private Status status;
-
     private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers = new HashMap<>();
 
     // TODO: DEFINIR TIPO DE THREAD POOL Y SI TIENE LIMITE DE CANTIDAD
     private ExecutorService executorService = Executors.newCachedThreadPool();
+
+    private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();
+    private final Object voteLock = "voteLock";
 
     public ElectionServiceImpl() {
         status = Status.UNDEFINED;
@@ -104,5 +110,24 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
                 // Do nothing
             }
         });
+    }
+
+    @Override
+    public void vote(Vote vote) throws RemoteException, IllegalElectionStateException {
+        /* TODO: Check Syncro */
+        if (status != Status.OPEN) {
+            throw new IllegalElectionStateException("Solo se puede votar si los comicios están abiertos");
+        }
+        String state = vote.getState();
+        Integer table = vote.getTable();
+        synchronized (voteLock){
+            if(!votes.containsKey(state)){
+                votes.put(state,new HashMap<>());
+            }
+            if(!votes.get(state).containsKey(table)){
+                votes.get(state).put(table,new ArrayList<>());
+            }
+            votes.get(state).get(table).add(vote);
+        }
     }
 }
