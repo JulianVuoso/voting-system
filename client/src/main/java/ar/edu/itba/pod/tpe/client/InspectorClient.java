@@ -31,6 +31,8 @@ public class InspectorClient {
     private static int tableNumber;
     private static String partyName;
 
+    // TODO: Que hacer si salta alguna de esas excepciones? Las dejamos lanzadas
+    //  --> es un embole capturarlas siempre salvo super try catch que cubra everything
     public static void main(String[] args) throws RemoteException, NotBoundException {
         logger.info("tpe1-g6 InspectorClient Starting ...");
 
