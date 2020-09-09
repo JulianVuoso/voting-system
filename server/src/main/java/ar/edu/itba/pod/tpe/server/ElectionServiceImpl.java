@@ -1,8 +1,8 @@
 package ar.edu.itba.pod.tpe.server;
 
-import ar.edu.itba.pod.tpe.exceptions.AdministrationException;
+import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
-import ar.edu.itba.pod.tpe.interfaces.AdministrationService;
+import ar.edu.itba.pod.tpe.interfaces.ManagementService;
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.VoteAvailableCallbackHandler;
 import ar.edu.itba.pod.tpe.models.Status;
@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ElectionServiceImpl implements AdministrationService, InspectionService {
+public class ElectionServiceImpl implements ManagementService, InspectionService {
     private static Logger logger = LoggerFactory.getLogger(ElectionServiceImpl.class);
 
 
@@ -32,10 +32,10 @@ public class ElectionServiceImpl implements AdministrationService, InspectionSer
     }
 
     @Override
-    public Status open() throws RemoteException, AdministrationException {
+    public Status open() throws RemoteException, ManagementException {
         switch (status) {
-            case CLOSE: throw new AdministrationException("the poll is already closed");
-            case OPEN: throw new AdministrationException("the poll is already open");
+            case CLOSE: throw new ManagementException("the poll is already closed");
+            case OPEN: throw new ManagementException("the poll is already open");
             default: status = Status.OPEN;
         }
         logger.info("Election started");
@@ -43,10 +43,10 @@ public class ElectionServiceImpl implements AdministrationService, InspectionSer
     }
 
     @Override
-    public Status close() throws RemoteException, AdministrationException {
+    public Status close() throws RemoteException, ManagementException {
         switch (status) {
-            case UNDEFINED: throw new AdministrationException("the poll has not been opened yet");
-            case CLOSE: throw new AdministrationException("the poll is already close");
+            case UNDEFINED: throw new ManagementException("the poll has not been opened yet");
+            case CLOSE: throw new ManagementException("the poll is already close");
             default: status = Status.CLOSE;
         }
 

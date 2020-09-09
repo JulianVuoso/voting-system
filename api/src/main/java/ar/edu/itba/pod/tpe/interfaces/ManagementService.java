@@ -1,26 +1,26 @@
 package ar.edu.itba.pod.tpe.interfaces;
 
-import ar.edu.itba.pod.tpe.exceptions.AdministrationException;
+import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.models.Status;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface AdministrationService extends Remote {
+public interface ManagementService extends Remote {
 
     /**
      * Opens elections, enables for voting and more.
-     * @throws AdministrationException When the poll is closed.
+     * @throws ManagementException When the poll is closed.
      * @throws RemoteException
      */
-    Status open() throws RemoteException, AdministrationException;
+    Status open() throws RemoteException, ManagementException;
 
     /**
      * Close elections, triggers the definitive count of votes.
-     * @throws AdministrationException When the poll was not opened.
+     * @throws ManagementException When the poll was not opened.
      * @throws RemoteException
      */
-    Status close() throws RemoteException, AdministrationException;
+    Status close() throws RemoteException, ManagementException;
 
     /**
      * Returns the status of the poll, not started, started, and finished.

@@ -2,25 +2,22 @@ package ar.edu.itba.pod.tpe.client;
 
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
-import ar.edu.itba.pod.tpe.exceptions.AdministrationException;
-import ar.edu.itba.pod.tpe.interfaces.AdministrationService;
-import ar.edu.itba.pod.tpe.interfaces.InspectionService;
-import ar.edu.itba.pod.tpe.models.Status;
+import ar.edu.itba.pod.tpe.exceptions.ManagementException;
+import ar.edu.itba.pod.tpe.interfaces.ManagementService;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
-import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Optional;
 import java.util.Properties;
 
-public class AdministrationClient {
+public class ManagementClient {
 
-    private static Logger logger = LoggerFactory.getLogger(AdministrationClient.class);
+    private static Logger logger = LoggerFactory.getLogger(ManagementClient.class);
 
     private static final int ERROR_STATUS = 1;
 
@@ -45,7 +42,7 @@ public class AdministrationClient {
         logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + action);
 
         final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
-        final AdministrationService service = (AdministrationService) registry.lookup(SERVICE_NAME);
+        final ManagementService service = (ManagementService) registry.lookup(SERVICE_NAME);
 
 
         try {
@@ -62,7 +59,7 @@ public class AdministrationClient {
                 default:
                     System.err.println("Invalid action name, possible options: open, close, status");
             }
-        } catch (AdministrationException e) {
+        } catch (ManagementException e) {
             System.err.println("Error trying to " + action + ", " + e.getMessage());
         }
     }

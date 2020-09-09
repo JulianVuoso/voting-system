@@ -1,14 +1,14 @@
 package ar.edu.itba.pod.tpe.exceptions;
 
-public class AdministrationException extends Exception {
+public class ManagementException extends Exception {
 
     private static final long serialVersionUID = 1533564635752790375L;
 
-    public AdministrationException() {
+    public ManagementException() {
         super();
     }
 
-    public AdministrationException(String message) {
+    public ManagementException(String message) {
         super(message);
     }
 
