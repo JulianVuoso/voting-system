@@ -1,10 +1,13 @@
 package ar.edu.itba.pod.tpe.server;
 
+import ar.edu.itba.pod.tpe.exceptions.AdministrationException;
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
+import ar.edu.itba.pod.tpe.interfaces.AdministrationService;
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.VoteAvailableCallbackHandler;
+import ar.edu.itba.pod.tpe.models.Status;
+import ar.edu.itba.pod.tpe.server.utils.Pair;
 import ar.edu.itba.pod.tpe.stub.InspectionVote;
-import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,19 +16,53 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class InspectionServiceImpl implements InspectionService {
-    private static Logger logger = LoggerFactory.getLogger(InspectionServiceImpl.class);
+public class ElectionServiceImpl implements AdministrationService, InspectionService {
+    private static Logger logger = LoggerFactory.getLogger(ElectionServiceImpl.class);
 
-    private boolean started; // Puede ser un Enum Status
+
+    private Status status;
 
     private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers = new HashMap<>();
 
     // TODO: DEFINIR TIPO DE THREAD POOL Y SI TIENE LIMITE DE CANTIDAD
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
+    public ElectionServiceImpl() {
+        status = Status.UNDEFINED;
+    }
+
+    @Override
+    public Status open() throws RemoteException, AdministrationException {
+        switch (status) {
+            case CLOSE: throw new AdministrationException("the poll is already closed");
+            case OPEN: throw new AdministrationException("the poll is already open");
+            default: status = Status.OPEN;
+        }
+        return Status.STARTED;
+    }
+
+    @Override
+    public Status close() throws RemoteException, AdministrationException {
+        switch (status) {
+            case UNDEFINED: throw new AdministrationException("the poll has not been opened yet");
+            case CLOSE: throw new AdministrationException("the poll is already close");
+            default: status = Status.CLOSE;
+        }
+
+        // Kill all handlers
+        inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(this::sendElectionFinishedToInspector));
+        inspectorHandlers.clear();
+        return Status.ENDED;
+    }
+
+    @Override
+    public Status status() throws RemoteException {
+        return status;
+    }
+
     @Override
     public void vote(InspectionVote vote) throws RemoteException {
-        if (!started) started = true;
+        if (status != Status.OPEN) status = Status.OPEN;
 
         final Pair<String, Integer> inspectLocation = new Pair<>(vote.getFptpVote(), vote.getTableNumber());
         Optional.ofNullable(inspectorHandlers.get(inspectLocation))
@@ -35,18 +72,10 @@ public class InspectionServiceImpl implements InspectionService {
         System.out.println("Vote registered: " + vote);
     }
 
-    @Override
-    public void finishElection() throws RemoteException {
-        started = false;
-        System.out.println("Election finished");
-        inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(this::sendElectionFinishedToInspector));
-        inspectorHandlers.clear();
-    }
-
     // TODO: VER SI TIENE QUE SER SYNC CON ALGO
     @Override
     public void inspect(int table, String party, VoteAvailableCallbackHandler handler) throws RemoteException, IllegalElectionStateException {
-        if (started) {
+        if (status != Status.UNDEFINED) {
             throw new IllegalElectionStateException("Solo se puede registrar un fiscal antes de que comience la elección");
         }
         final Pair<String, Integer> keyPair = new Pair<>(party, table);

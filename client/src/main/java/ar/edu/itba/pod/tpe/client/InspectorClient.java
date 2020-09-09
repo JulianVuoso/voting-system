@@ -1,5 +1,7 @@
 package ar.edu.itba.pod.tpe.client;
 
+import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
+import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.VoteAvailableCallbackHandler;

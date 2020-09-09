@@ -18,5 +18,4 @@ public interface InspectionService extends Remote {
 
     // STUB METHODS
     void vote(InspectionVote vote) throws RemoteException;
-    void finishElection() throws RemoteException;
 }

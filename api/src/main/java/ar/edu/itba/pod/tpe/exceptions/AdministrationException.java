@@ -8,15 +8,8 @@ public class AdministrationException extends Exception {
         super();
     }
 
-    public AdministrationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
     public AdministrationException(String message) {
         super(message);
     }
 
-    public AdministrationException(Throwable cause) {
-        super(cause);
-    }
 }

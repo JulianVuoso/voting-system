@@ -16,9 +16,7 @@ public class Server {
     public static void main(String[] args) throws RemoteException {
         logger.info("tpe1-g6 Server Starting ...");
 
-        final AdministrationService gs = new AdministrationServiceImpl();
-
-        final Remote remote = UnicastRemoteObject.exportObject(gs, 0);
+        final Remote remote = UnicastRemoteObject.exportObject(new ElectionServiceImpl(), 0);
 
         final Registry registry = LocateRegistry.getRegistry();
         registry.rebind("service", remote);

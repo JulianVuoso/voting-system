@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.tpe.client;
+package ar.edu.itba.pod.tpe.client.tests;
 
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.stub.InspectionVote;
@@ -35,6 +35,6 @@ public class TestInspectorClient {
         } while (split.length > 0 && !split[0].equals("exit"));
 
         System.out.println("Sending finish to election");
-        service.finishElection();
+//        service.finishElection(); TODO fix here
     }
 }

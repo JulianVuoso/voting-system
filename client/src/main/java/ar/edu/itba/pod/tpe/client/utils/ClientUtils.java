@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.tpe.client;
+package ar.edu.itba.pod.tpe.client.utils;
 
 import org.apache.commons.cli.*;
 

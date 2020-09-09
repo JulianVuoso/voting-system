@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.tpe.server;
+package ar.edu.itba.pod.tpe.server.deprecated;
 
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import org.slf4j.Logger;
