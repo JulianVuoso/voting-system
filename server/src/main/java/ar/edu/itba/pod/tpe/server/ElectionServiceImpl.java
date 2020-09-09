@@ -38,6 +38,7 @@ public class ElectionServiceImpl implements AdministrationService, InspectionSer
             case OPEN: throw new AdministrationException("the poll is already open");
             default: status = Status.OPEN;
         }
+        logger.info("Election started");
         return Status.STARTED;
     }
 
@@ -52,6 +53,7 @@ public class ElectionServiceImpl implements AdministrationService, InspectionSer
         // Kill all handlers
         inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(this::sendElectionFinishedToInspector));
         inspectorHandlers.clear();
+        logger.info("Election finished and all handlers killed");
         return Status.ENDED;
     }
 

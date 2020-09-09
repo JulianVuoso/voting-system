@@ -27,7 +27,7 @@ public class InspectorClient {
     private static final String ID_PARAM = "id";
     private static final String PARTY_PARAM = "party";
 
-    private static final String INSPECTION_SERVICE_NAME = "inspection-service";
+    private static final String INSPECTION_SERVICE_NAME = "service";
 
     private static InetSocketAddress serverAddress;
     private static int tableNumber;
