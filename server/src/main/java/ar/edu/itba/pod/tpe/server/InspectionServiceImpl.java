@@ -20,6 +20,7 @@ public class InspectionServiceImpl implements InspectionService {
 
     private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers = new HashMap<>();
 
+    // TODO: DEFINIR TIPO DE THREAD POOL Y SI TIENE LIMITE DE CANTIDAD
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
     @Override
@@ -38,13 +39,7 @@ public class InspectionServiceImpl implements InspectionService {
     public void finishElection() throws RemoteException {
         started = false;
         System.out.println("Election finished");
-        inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(handler -> {
-            try {
-                handler.electionFinished();
-            } catch (RemoteException e) {
-                // Do nothing
-            }
-        }));
+        inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(this::sendElectionFinishedToInspector));
         inspectorHandlers.clear();
     }
 
@@ -66,6 +61,16 @@ public class InspectionServiceImpl implements InspectionService {
             } catch (RemoteException e) {
                 logger.error("Could not send notification to Inspector");
                 // FIXME: DEBERIA DESREGISTRARLO?? --> Preguntar
+            }
+        });
+    }
+
+    private void sendElectionFinishedToInspector(final VoteAvailableCallbackHandler handler) {
+        executorService.submit(() -> {
+            try {
+                handler.electionFinished();
+            } catch (RemoteException e) {
+                // Do nothing
             }
         });
     }

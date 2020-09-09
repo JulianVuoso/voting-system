@@ -14,4 +14,4 @@ sleep 1
 gnome-terminal -e "bash -c 'cd server/target/tpe1-g6-server-1.0-SNAPSHOT; ./run-inspection-server.sh'"
 sleep 1
 gnome-terminal -e "bash -c 'cd client/target/tpe1-g6-client-1.0-SNAPSHOT; ./run-fiscal-test.sh'"
-gnome-terminal -e "bash -c 'cd client/target/tpe1-g6-client-1.0-SNAPSHOT; ./run-fiscal.sh'"
+gnome-terminal -e "bash -c 'cd client/target/tpe1-g6-client-1.0-SNAPSHOT; ./run-fiscal.sh -DserverAddress=127.0.0.1:1099 -Did=123 -Dparty=TIGER'"
