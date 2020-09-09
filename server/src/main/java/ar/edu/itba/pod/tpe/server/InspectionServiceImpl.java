@@ -9,19 +9,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.rmi.RemoteException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
 public class InspectionServiceImpl implements InspectionService {
     private static Logger logger = LoggerFactory.getLogger(InspectionServiceImpl.class);
 
     private boolean started; // Puede ser un Enum Status
-    // TODO: Ver si puede haber mas de un inspector para una mesa y un partido
-    private Map<Pair<String, Integer>, VoteAvailableCallbackHandler> inspectorHandlers = new HashMap<>();
+
+    private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers = new HashMap<>();
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -30,7 +27,8 @@ public class InspectionServiceImpl implements InspectionService {
         if (!started) started = true;
 
         final Pair<String, Integer> inspectLocation = new Pair<>(vote.getFptpVote(), vote.getTableNumber());
-        Optional.ofNullable(inspectorHandlers.get(inspectLocation)).ifPresent(this::sendNotificationToInspector);
+        Optional.ofNullable(inspectorHandlers.get(inspectLocation))
+                .ifPresent(handlerList -> handlerList.forEach(this::sendNotificationToInspector));
 
         // REGISTER VOTE
         System.out.println("Vote registered: " + vote);
@@ -40,13 +38,13 @@ public class InspectionServiceImpl implements InspectionService {
     public void finishElection() throws RemoteException {
         started = false;
         System.out.println("Election finished");
-        inspectorHandlers.values().forEach(handler -> {
+        inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(handler -> {
             try {
                 handler.electionFinished();
             } catch (RemoteException e) {
                 // Do nothing
             }
-        });
+        }));
         inspectorHandlers.clear();
     }
 
@@ -57,10 +55,8 @@ public class InspectionServiceImpl implements InspectionService {
             throw new IllegalElectionStateException("Solo se puede registrar un fiscal antes de que comience la elección");
         }
         final Pair<String, Integer> keyPair = new Pair<>(party, table);
-//        Si puede haber mas de uno, aca me traeria la lista o la crearia
-//        inspectorHandlers.get(new Pair<>(party, table));
-//        TODO: SINO, TIRO ERROR O LO PISO O QUE HACEMOS???
-        inspectorHandlers.put(keyPair, handler);
+        inspectorHandlers.computeIfAbsent(keyPair, k -> new ArrayList<>()); // If keyPair not present, put(keyPair, new ArrayList()
+        inspectorHandlers.get(keyPair).add(handler);
     }
 
     private void sendNotificationToInspector(final VoteAvailableCallbackHandler handler) {
@@ -69,7 +65,7 @@ public class InspectionServiceImpl implements InspectionService {
                 handler.voteRegistered();
             } catch (RemoteException e) {
                 logger.error("Could not send notification to Inspector");
-                // FIXME: DEBERIA DESREGISTRARLO??
+                // FIXME: DEBERIA DESREGISTRARLO?? --> Preguntar
             }
         });
     }
