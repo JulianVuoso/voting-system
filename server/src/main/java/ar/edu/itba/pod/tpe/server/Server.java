@@ -21,6 +21,6 @@ public class Server {
         final Remote remote = UnicastRemoteObject.exportObject(gs, 0);
 
         final Registry registry = LocateRegistry.getRegistry();
-        registry.rebind("dummy", remote);
+        registry.rebind("service", remote);
     }
 }

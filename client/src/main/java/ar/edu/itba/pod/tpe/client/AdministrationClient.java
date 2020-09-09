@@ -42,18 +42,18 @@ public class AdministrationClient {
             return;
         }
 
-        final AdministrationService service = (AdministrationService) Naming.lookup(address + SERVICE_NAME);
+        final AdministrationService service = (AdministrationService) Naming.lookup("//" + address + "/" + SERVICE_NAME);
 
         try {
             switch (action) {
                 case "open":
-                    System.out.println(service.open());
+                    System.out.println("Election" + service.open().toString().toLowerCase());
                     break;
                 case "close":
-                    System.out.println(service.close());
+                    System.out.println("Election" + service.close().toString().toLowerCase());
                     break;
                 case "status":
-                    System.out.println(service.status());
+                    System.out.println("Election is" + service.status().toString().toLowerCase());
                     break;
                 default:
                     System.err.println("Invalid action name, possible options: open, close, status");
