@@ -15,19 +15,21 @@ public class AdministrationServiceImpl implements AdministrationService {
     }
 
     @Override
-    public void open() throws RemoteException, AdministrationException {
+    public Status open() throws RemoteException, AdministrationException {
         switch (status) {
             case CLOSE: throw new AdministrationException("The poll is already closed");
             default: status = Status.OPEN;
         }
+        return Status.STARTED;
     }
 
     @Override
-    public void close() throws RemoteException, AdministrationException {
+    public Status close() throws RemoteException, AdministrationException {
         switch (status) {
             case UNDEFINED: throw new AdministrationException("The poll has not been opened yet");
             default: status = Status.CLOSE;
         }
+        return Status.ENDED;
     }
 
     @Override

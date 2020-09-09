@@ -13,14 +13,14 @@ public interface AdministrationService extends Remote {
      * @throws AdministrationException When the poll is closed.
      * @throws RemoteException
      */
-    void open() throws RemoteException, AdministrationException;
+    Status open() throws RemoteException, AdministrationException;
 
     /**
      * Close elections, triggers the definitive count of votes.
      * @throws AdministrationException When the poll was not opened.
      * @throws RemoteException
      */
-    void close() throws RemoteException, AdministrationException;
+    Status close() throws RemoteException, AdministrationException;
 
     /**
      * Returns the status of the poll, not started, started, and finished.
