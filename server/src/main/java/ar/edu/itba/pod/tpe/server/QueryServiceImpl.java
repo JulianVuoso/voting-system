@@ -30,18 +30,18 @@ public class QueryServiceImpl implements QueryService {
     @Override
     public Result askNational() throws RemoteException, QueryException {
         if(status==0) throw new QueryException("Polls already closed");
-        if(status==1)                           //  open
+        if(status==1)                                           //  open
             return natFptp;
-        return null;
+        natStar = new STAR(firstSTAR(), secondSTAR());          //  finished
+        return natStar;
     }
 
     @Override
     public Result askState(String state) throws RemoteException, QueryException {
         if(status==0) throw new QueryException("Polls already closed");
-        if(status==1)                           //  open
+        if(status==1)                                          //  open
             return stateFptp.get(state);
-
-        //finished
+//        stateSpav                                             //  finished
         return null;
     }
 
@@ -68,6 +68,38 @@ public class QueryServiceImpl implements QueryService {
 
         tableFptp.putIfAbsent(vote.getTable(), new FPTP());                                     // TABLE: same a state
         tableFptp.get(vote.getTable()).getMap().put(vote.getVoteFPTP(), tableFptp.get(vote.getTable()).getMap().get(vote.getVoteFPTP()+1));
+    }
+
+    private Map<String, Integer> firstSTAR() {
+        List<Vote> totalVotes = new ArrayList<>();
+        Map<String, Integer> firstStar = new HashMap<>();
+        for(Map<Integer, List<Vote>> vote : votes.values()){
+            for(List<Vote> list : vote.values())
+                totalVotes.addAll(list);
+        }
+        for(Vote vote : totalVotes){
+            for(String party : vote.getParty().keySet()){
+                firstStar.putIfAbsent(party, 0);
+                firstStar.putIfAbsent(party, firstStar.get(party) + vote.getParty().get(party));
+            }
+        }
+        return firstStar;
+    }
+
+    private Map<String, Double> secondSTAR() {
+        Map<String, Integer> aux = natFptp.getMap();                // TODO: ver una forma mejor
+        Map<String, Double> secondStar = new HashMap<>();
+        String winner1 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+        aux.put(winner1, -1);
+        String winner2 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+
+        int total = aux.get(winner1) + aux.get(winner2);
+        secondStar.put(winner1, aux.get(winner1).doubleValue() / total * 100);
+        secondStar.put(winner2, 100 - aux.get(winner1).doubleValue());
+        // winner 1 -> %
+        // winner 2 -> %
+
+        return secondStar;
     }
 
 }
