@@ -1,4 +1,5 @@
-package ar.edu.itba.pod.tpe.server;
+
+package ar.edu.itba.pod.tpe.server.deprecated;
 
 import ar.edu.itba.pod.tpe.exceptions.QueryException;
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
@@ -8,16 +9,20 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.*;
 
-public class QueryServiceImpl implements QueryService {
-
+public class QueryServiceImpl /*implements QueryService*/ {
+/*
     int status;
     Map<String, Map<Integer, List<Vote>>> votes;
 
-    /* Finals */
+    */
+/* Finals *//*
+
     STAR natStar;
     SPAV stateSpav;
 
-    /*  Partials */
+    */
+/*  Partials *//*
+
     FPTP natFptp = new FPTP();
     Map<String, FPTP> stateFptp;
     Map<Integer, FPTP> tableFptp;
@@ -84,6 +89,8 @@ public class QueryServiceImpl implements QueryService {
         return tableFptp.get(table);
     }
 
+    */
+/*
     @Override
     public void vote(Vote vote) {        // comento en español para que me sigan + facil despues lo traduzco
         natFptp.getMap().putIfAbsent(vote.getVoteFPTP(),0);                                     // NACIONAL: voto que entra, voto que se suma al mapa general FPTP
@@ -95,6 +102,8 @@ public class QueryServiceImpl implements QueryService {
         tableFptp.putIfAbsent(vote.getTable(), new FPTP());                                     // TABLE: same a state
         tableFptp.get(vote.getTable()).getMap().put(vote.getVoteFPTP(), tableFptp.get(vote.getTable()).getMap().get(vote.getVoteFPTP()+1));
     }
+    *//*
+
 
     private List<Vote> allVotes(){
         List<Vote> totalVotes = new ArrayList<>();
@@ -150,10 +159,11 @@ public class QueryServiceImpl implements QueryService {
         secondStar.put(winner2, 100 - points.get(winner1).doubleValue());
 
         return secondStar;
-    }
+    }*/
 }
+/*
 
-  /*  for(Map<Integer, List<Vote>> vote : tabledVotes){
+/*  for(Map<Integer, List<Vote>> vote : tabledVotes){
         for(List<Vote> list : vote.values())
             totalVotes.addAll(list);
     }*/

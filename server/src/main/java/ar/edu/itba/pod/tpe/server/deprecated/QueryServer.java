@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.tpe.server;
+package ar.edu.itba.pod.tpe.server.deprecated;
 
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
 import org.slf4j.Logger;
@@ -15,10 +15,10 @@ public class QueryServer {
 
     public static void main(String[] args) throws RemoteException {
         logger.info("tpe1-g6 QueryServer Starting ...");
-        final QueryService qs = new QueryServiceImpl();
-        final Remote remote = UnicastRemoteObject.exportObject(qs, 0);
-        final Registry registry = LocateRegistry.getRegistry();
-        registry.rebind("inspection-service", remote);
-        System.out.println("Inspection Service bound");
+//        final QueryService qs = new QueryServiceImpl();
+//        final Remote remote = UnicastRemoteObject.exportObject(qs, 0);
+//        final Registry registry = LocateRegistry.getRegistry();
+//        registry.rebind("inspection-service", remote);
+//        System.out.println("Inspection Service bound");
     }
 }
