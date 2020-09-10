@@ -16,7 +16,7 @@ public class STAR extends Result {
         this.type = Type.STAR;
     }
 
-    public String setWinner(){
+    public String getWinner(){
         return winner[0];
     }
 

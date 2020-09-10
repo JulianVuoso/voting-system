@@ -15,7 +15,7 @@ public class QueryServiceImpl implements QueryService {
 
     /* Finals */
     STAR natStar;
-    Map<String, SPAV> stateSpav;
+    SPAV stateSpav;
 
     /*  Partials */
     FPTP natFptp = new FPTP();
@@ -32,8 +32,8 @@ public class QueryServiceImpl implements QueryService {
         if(status==0) throw new QueryException("Polls already closed");
         if(status==1)                                           //  open
             return natFptp;
-        natStar = new STAR(firstSTAR(), secondSTAR());          //  finished
-        return natStar;
+//        natStar = new STAR(firstSTAR(), secondSTAR());          //  finished
+        return new STAR(firstSTAR(), secondSTAR());
     }
 
     @Override
