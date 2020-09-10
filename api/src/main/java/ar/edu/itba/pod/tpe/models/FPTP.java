@@ -27,6 +27,10 @@ public class FPTP extends Result {
 
     }
 
+    public boolean getPartial(){
+        return partial;
+    }
+
     public Map<String, Integer> getMap(){
         return fptp;
     }

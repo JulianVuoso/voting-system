@@ -20,4 +20,15 @@ public class STAR extends Result {
         return winner[0];
     }
 
+     public boolean getPartial() {
+        return partial;
+     }
+
+    public Map<String, Integer> getFirstRound() {
+        return firstRound;
+    }
+
+    public Map<String, Double> getSecondRound() {
+        return secondRound;
+    }
 }

@@ -15,4 +15,20 @@ public class SPAV extends Result {
         this.partial = false;
         this.type = Type.SPAV;
     }
+
+    public boolean getPartial(){
+        return partial;
+    }
+
+    public Map<String, Double> getRound1() {
+        return round1;
+    }
+
+    public Map<String, Double> getRound2() {
+        return round2;
+    }
+
+    public Map<String, Double> getRound3() {
+        return round3;
+    }
 }

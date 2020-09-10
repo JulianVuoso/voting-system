@@ -33,8 +33,8 @@ public class ElectionServiceImpl implements ManagementService,
     private final Object voteLock = "voteLock";
 
     FPTP natFptp = new FPTP();
-    Map<String, FPTP> stateFptp;
-    Map<Integer, FPTP> tableFptp;
+    Map<String, FPTP> stateFptp = new HashMap<>();
+    Map<Integer, FPTP> tableFptp = new HashMap<>();
 
     public ElectionServiceImpl() {
         status = Status.UNDEFINED;
@@ -135,6 +135,10 @@ public class ElectionServiceImpl implements ManagementService,
 
         natFptp.getMap().putIfAbsent(vote.getVoteFPTP(),0);                                     // NACIONAL: voto que entra, voto que se suma al mapa general FPTP
         natFptp.getMap().put(vote.getVoteFPTP(), natFptp.getMap().get(vote.getVoteFPTP()+1));
+
+
+        System.out.println(vote.getVoteFPTP() + " "+ natFptp.getMap().get(vote.getVoteFPTP()));
+
 
         stateFptp.putIfAbsent(vote.getState(), new FPTP());                                     // STATE: si es el primer voto de esa provincia le agrego un FPTP
         stateFptp.get(vote.getState()).getMap().put(vote.getVoteFPTP(), stateFptp.get(vote.getState()).getMap().get(vote.getVoteFPTP()+1));
