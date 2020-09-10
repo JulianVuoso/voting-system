@@ -134,17 +134,18 @@ public class ElectionServiceImpl implements ManagementService,
         }
 
         natFptp.getMap().putIfAbsent(vote.getVoteFPTP(),0);                                     // NACIONAL: voto que entra, voto que se suma al mapa general FPTP
-        natFptp.getMap().put(vote.getVoteFPTP(), natFptp.getMap().get(vote.getVoteFPTP()+1));
-
-
-        System.out.println(vote.getVoteFPTP() + " "+ natFptp.getMap().get(vote.getVoteFPTP()));
+        natFptp.getMap().put(vote.getVoteFPTP(), natFptp.getMap().get(vote.getVoteFPTP())+1);
 
 
         stateFptp.putIfAbsent(vote.getState(), new FPTP());                                     // STATE: si es el primer voto de esa provincia le agrego un FPTP
-        stateFptp.get(vote.getState()).getMap().put(vote.getVoteFPTP(), stateFptp.get(vote.getState()).getMap().get(vote.getVoteFPTP()+1));
-                                                                                                // Luego obtengo ese FPTP y le meto en key Party 1 voto mas
+        stateFptp.get(vote.getState()).getMap().putIfAbsent(vote.getVoteFPTP(),0);
+        stateFptp.get(vote.getState()).getMap().put(vote.getVoteFPTP(), stateFptp.get(vote.getState()).getMap().get(vote.getVoteFPTP())+1);
+
+        // Luego obtengo ese FPTP y le meto en key Party 1 voto mas
         tableFptp.putIfAbsent(vote.getTable(), new FPTP());                                     // TABLE: same a state
-        tableFptp.get(vote.getTable()).getMap().put(vote.getVoteFPTP(), tableFptp.get(vote.getTable()).getMap().get(vote.getVoteFPTP()+1));
+        tableFptp.get(vote.getTable()).getMap().putIfAbsent(vote.getVoteFPTP(),0);
+        tableFptp.get(vote.getTable()).getMap().put(vote.getVoteFPTP(), tableFptp.get(vote.getTable()).getMap().get(vote.getVoteFPTP())+1);
+
     }
 
     /**       *************************************         **********************************           **/
