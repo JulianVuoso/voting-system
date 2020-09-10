@@ -41,7 +41,9 @@ public class QueryServiceImpl implements QueryService {
         if(status==0) throw new QueryException("Polls already closed");
         if(status==1)                                          //  open
             return stateFptp.get(state);
-//        stateSpav                                             //  finished
+//        stateSpav.put()                                             //  finished
+        // en cada key va a haber una provincia
+        // que en cada valor va a tener un SPAV que contiene 3 mapas
         return null;
     }
 
