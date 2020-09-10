@@ -1,5 +1,8 @@
 package ar.edu.itba.pod.tpe.models;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 
 public class FPTP extends Result {
@@ -12,18 +15,35 @@ public class FPTP extends Result {
         this.type = type;
     }
 
-    public String getWinner(){
-        return "a";
+    public FPTP (){
+        this.fptp = new HashMap<>();
+        this.partial = true;
+        this.type = Type.FPTP;
     }
 
-    public Map<String, Integer> getPercenteges(){
+    public FPTP (String party){
+        this.fptp = new HashMap<>();
+        this.fptp.put(party,1);
+
+    }
+
+    public Map<String, Integer> getMap(){
         return fptp;
+    }
+
+    public void setPartial(boolean partial){
+        this.partial = partial;
+    }
+
+    public void obtainWinner(){
+        this.winner[0] = Collections.max(fptp.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+    }
+
+    public String getWinner(){
+        return winner[0];
     }
 
     public Map<String, Integer> getVotes(){
         return fptp;
     }
 }
-
-
-// Map<String = Provincia, Map<Integer = MESA, List<Vote>>>

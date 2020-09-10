@@ -2,10 +2,7 @@ package ar.edu.itba.pod.tpe.server;
 
 import ar.edu.itba.pod.tpe.exceptions.QueryException;
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
-import ar.edu.itba.pod.tpe.models.FPTP;
-import ar.edu.itba.pod.tpe.models.Result;
-import ar.edu.itba.pod.tpe.models.Type;
-import ar.edu.itba.pod.tpe.models.Vote;
+import ar.edu.itba.pod.tpe.models.*;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -16,6 +13,15 @@ public class QueryServiceImpl implements QueryService {
     int status;
     Map<String, Map<Integer, List<Vote>>> votes;
 
+    /* Finals */
+    STAR natStar;
+    Map<String, SPAV> stateSpav;
+
+    /*  Partials */
+    FPTP natFptp = new FPTP();
+    Map<String, FPTP> stateFptp;
+    Map<Integer, FPTP> tableFptp;
+
     public QueryServiceImpl() {
         this.status = 0;
         this.votes = new HashMap<>();
@@ -24,33 +30,44 @@ public class QueryServiceImpl implements QueryService {
     @Override
     public Result askNational() throws RemoteException, QueryException {
         if(status==0) throw new QueryException("Polls already closed");
+        if(status==1)                           //  open
+            return natFptp;
         return null;
     }
 
     @Override
     public Result askState(String state) throws RemoteException, QueryException {
         if(status==0) throw new QueryException("Polls already closed");
+        if(status==1)                           //  open
+            return stateFptp.get(state);
+
+        //finished
         return null;
     }
 
-    Map<String, Integer> livefptpVotes = new HashMap<>();
-    FPTP liveFptp;
-
     @Override
     public Result askTable(Integer table) throws RemoteException, QueryException {
-        if(status==0) throw new QueryException("Polls already closed");
+        if(status==0)
+            throw new QueryException("Polls already closed");
 
-        if(status==1) {    //      open
-            return new FPTP(livefptpVotes, true, Type.FPTP);
-        }
-        // finished
-        return new FPTP(livefptpVotes, false, Type.FPTP);
+        if(status==1)                               //  open
+            return tableFptp.get(table);
+
+        tableFptp.get(table).setPartial(false);     //  finished
+        tableFptp.get(table).obtainWinner();
+        return tableFptp.get(table);
     }
 
     @Override
-    public void vote(Vote vote) {
-        livefptpVotes.putIfAbsent(vote.getVoteFPTP(),0);
-        livefptpVotes.put(vote.getVoteFPTP(), livefptpVotes.get(vote.getVoteFPTP())+1);
+    public void vote(Vote vote) {        // comento en español para que me sigan + facil despues lo traduzco
+        natFptp.getMap().putIfAbsent(vote.getVoteFPTP(),0);                                     // NACIONAL: voto que entra, voto que se suma al mapa general FPTP
+        natFptp.getMap().put(vote.getVoteFPTP(), natFptp.getMap().get(vote.getVoteFPTP()+1));
+
+        stateFptp.putIfAbsent(vote.getState(), new FPTP());                                     // STATE: si es el primer voto de esa provincia le agrego un FPTP
+        stateFptp.get(vote.getState()).getMap().put(vote.getVoteFPTP(), stateFptp.get(vote.getState()).getMap().get(vote.getVoteFPTP()+1)); // Luego obtengo ese FPTP y le meto en key Party 1 voto mas
+
+        tableFptp.putIfAbsent(vote.getTable(), new FPTP());                                     // TABLE: same a state
+        tableFptp.get(vote.getTable()).getMap().put(vote.getVoteFPTP(), tableFptp.get(vote.getTable()).getMap().get(vote.getVoteFPTP()+1));
     }
 
 }
