@@ -48,7 +48,7 @@ public class TestCSVMaker {
 
         STAR result = (STAR) service.askNational();
 
-        printSTAR("outstar.csv",result);
+        printSTAR("outstar4.csv",result);
 
 
     }

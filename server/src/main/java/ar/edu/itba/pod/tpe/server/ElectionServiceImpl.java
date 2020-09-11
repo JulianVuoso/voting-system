@@ -244,16 +244,28 @@ public class ElectionServiceImpl implements ManagementService,
     }
 
     private Map<String, Double> secondSTAR() {
-        Map<String, Integer> aux = natFptp.getMap();                // TODO: ver una forma mejor
+        Map<String, Integer> aux = firstSTAR();                // TODO: ver una forma mejor
         Map<String, Double> secondStar = new HashMap<>();
         Map<String, Integer> points = new HashMap<>();
 
 //        String winner1 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-        String winner1 = Collections.max(aux.entrySet(), Map.Entry.comparingByValue()).getKey();
+        String winner1 = Collections.max(aux.entrySet(),
+                                            (o1, o2) -> o1.getValue() > o2.getValue()?
+                                                    1:(o1.getValue().equals(o2.getValue())?
+                                                    (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
+
         aux.put(winner1, -1);
         //String winner2 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-        String winner2 = Collections.max(aux.entrySet(), Map.Entry.comparingByValue()).getKey();
+        String winner2 = Collections.max(aux.entrySet(),
+                                            (o1, o2) -> o1.getValue() > o2.getValue()?
+                                                    1:(o1.getValue().equals(o2.getValue())?
+                                                    (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
 
+        System.out.println(winner1);
+        System.out.println(winner2);
+
+        /*winner1 = "TIGER";
+        winner2 = "BUFFALO";*/
         // winner 1 -> %
         // winner 2 -> %
         String winnerAlpha = winner1.compareTo(winner2) < 0 ? winner1:winner2;
@@ -261,7 +273,7 @@ public class ElectionServiceImpl implements ManagementService,
 
             if (vote.getSTAR().get(winner1) != null && vote.getSTAR().get(winner2) != null) {
                 if (vote.getSTAR().get(winner1) > vote.getSTAR().get(winner2)) {    // si en el voto w1 > w2
-                    points.putIfAbsent(winner1, 0);                               // le sumo uno a w1 en el map
+                    points.putIfAbsent(winner1, 0);                                 // le sumo uno a w1 en el map
                     points.put(winner1, points.get(winner1) + 1);
                 } else {
                     if (vote.getSTAR().get(winner1) < vote.getSTAR().get(winner2)) {
