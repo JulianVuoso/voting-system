@@ -169,11 +169,23 @@ public class ElectionServiceImpl implements ManagementService,
                 String[] winners = new String[3];
                 Map<String, Double> round1 = spavIterator(state, null);
 
-                winners[0] = Collections.max(round1.entrySet(), Comparator.comparingDouble(Map.Entry::getValue)).getKey();
+
+                winners[0] = Collections.max(round1.entrySet(),
+                                (o1, o2) -> o1.getValue() > o2.getValue()?
+                                     1:(o1.getValue().equals(o2.getValue())?
+                                        (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
+
                 Map<String, Double> round2 = spavIterator(state, winners);
-                winners[1] = Collections.max(round2.entrySet(), Comparator.comparingDouble(Map.Entry::getValue)).getKey();
+                winners[1] = Collections.max(round2.entrySet(),
+                        (o1, o2) -> o1.getValue() > o2.getValue()?
+                                1:(o1.getValue().equals(o2.getValue())?
+                                (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
+
                 Map<String, Double> round3 = spavIterator(state, winners);
-                winners[2] = Collections.max(round3.entrySet(), Comparator.comparingDouble(Map.Entry::getValue)).getKey();
+                winners[2] = Collections.max(round3.entrySet(),
+                                (o1, o2) -> o1.getValue() > o2.getValue()?
+                                     1:(o1.getValue().equals(o2.getValue())?
+                                    (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
 
                 return new SPAV(round1, round2, round3, winners);
             default: return null;
@@ -246,7 +258,6 @@ public class ElectionServiceImpl implements ManagementService,
         // winner 2 -> %
         String winnerAlpha = winner1.compareTo(winner2) < 0 ? winner1:winner2;
         for(Vote vote : allVotes()) {
-
 
             if (vote.getSTAR().get(winner1) != null && vote.getSTAR().get(winner2) != null) {
                 if (vote.getSTAR().get(winner1) > vote.getSTAR().get(winner2)) {    // si en el voto w1 > w2
