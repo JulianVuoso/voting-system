@@ -236,33 +236,46 @@ public class ElectionServiceImpl implements ManagementService,
         Map<String, Double> secondStar = new HashMap<>();
         Map<String, Integer> points = new HashMap<>();
 
-        String winner1 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+//        String winner1 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+        String winner1 = Collections.max(aux.entrySet(), Map.Entry.comparingByValue()).getKey();
         aux.put(winner1, -1);
-        String winner2 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+        //String winner2 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+        String winner2 = Collections.max(aux.entrySet(), Map.Entry.comparingByValue()).getKey();
 
-        System.out.println("Winner 1: " + winner1 + "--- Winner 2: " + winner2);
         // winner 1 -> %
         // winner 2 -> %
         String winnerAlpha = winner1.compareTo(winner2) < 0 ? winner1:winner2;
-        for(Vote vote : allVotes()){
-            if(vote.getSTAR().get(winner1) > vote.getSTAR().get(winner2)){    // si en el voto w1 > w2
-                points.putIfAbsent(winner1, 0);                               // le sumo uno a w1 en el map
-                points.put(winner1, points.get(winner1)+1);
+        for(Vote vote : allVotes()) {
+
+
+            if (vote.getSTAR().get(winner1) != null && vote.getSTAR().get(winner2) != null) {
+                if (vote.getSTAR().get(winner1) > vote.getSTAR().get(winner2)) {    // si en el voto w1 > w2
+                    points.putIfAbsent(winner1, 0);                               // le sumo uno a w1 en el map
+                    points.put(winner1, points.get(winner1) + 1);
+                } else {
+                    if (vote.getSTAR().get(winner1) < vote.getSTAR().get(winner2)) {
+                        points.putIfAbsent(winner2, 0);
+                        points.put(winner2, points.get(winner2) + 1);
+                    } else {
+                        points.putIfAbsent(winnerAlpha, 0);                       // si son iguales se lo sumo
+                        points.put(winnerAlpha, points.get(winnerAlpha) + 1);       // al menor alfabeticamente
+                    }
+                }
             }
             else{
-                if(vote.getSTAR().get(winner1) < vote.getSTAR().get(winner2)){
+                if(vote.getSTAR().get(winner1) == null && vote.getSTAR().get(winner2) != null){
                     points.putIfAbsent(winner2, 0);
-                    points.put(winner2, points.get(winner2)+1);
+                    points.put(winner2, points.get(winner2) + 1);
                 }
-                else{
-                    points.putIfAbsent(winnerAlpha, 0);                       // si son iguales se lo sumo
-                    points.put(winnerAlpha, points.get(winnerAlpha)+1);       // al menor alfabeticamente
+                else if(vote.getSTAR().get(winner1) != null && vote.getSTAR().get(winner2) == null){
+                    points.putIfAbsent(winner1, 0);                               // le sumo uno a w1 en el map
+                    points.put(winner1, points.get(winner1) + 1);
                 }
             }
         }
         int total = points.get(winner1) + points.get(winner2);
         secondStar.put(winner1, points.get(winner1).doubleValue() / total * 100);
-        secondStar.put(winner2, 100 - points.get(winner1).doubleValue());
+        secondStar.put(winner2, 100 - secondStar.get(winner1));
 
         return secondStar;
     }

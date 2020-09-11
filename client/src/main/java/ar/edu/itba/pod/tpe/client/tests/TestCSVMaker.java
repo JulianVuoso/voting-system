@@ -107,9 +107,9 @@ public class TestCSVMaker {
                     .withHeader(SCORE_HEADER)
                     .withRecordSeparator('\n'));
 
-            /*STAR results = (STAR) result;
+            STAR results = (STAR) result;
 
-            *//** Ordeno el mapa del primer round **//*
+            /* Ordeno el mapa del primer round */
             results.getFirstRound().entrySet().stream().sorted((o1, o2) -> {
                 if (!o1.getValue().equals(o2.getValue()))
                     return Double.compare(o2.getValue(), o1.getValue());
@@ -124,7 +124,27 @@ public class TestCSVMaker {
                     e.printStackTrace();
                 }
             });
-            csvPrinter.flush(); */
+
+            csvPrinter.printRecord(PERCENTAGE_HEADER);
+            results.getSecondRound().entrySet().stream().sorted((o1, o2) -> {
+                if (!o1.getValue().equals(o2.getValue()))
+                    return Double.compare(o2.getValue(), o1.getValue());
+                return o1.getKey().compareTo(o2.getKey());
+            }).forEach( r -> {
+                /** Lleno el csv **/
+                String party = r.getKey();
+                DecimalFormat format = new DecimalFormat("##.00");
+                String percent = format.format(r.getValue()) + "%";
+                try {
+                    csvPrinter.printRecord(percent, party);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            csvPrinter.printRecord("Winner");
+            csvPrinter.printRecord(results.getWinner());
+
+            csvPrinter.flush();
         }
         catch (IOException e){
             System.err.println("Error while printing CSV file");

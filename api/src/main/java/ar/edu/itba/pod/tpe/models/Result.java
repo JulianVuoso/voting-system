@@ -3,7 +3,7 @@ package ar.edu.itba.pod.tpe.models;
 import java.io.Serializable;
 
 public abstract class Result implements Serializable {
-    String[] winner;
+    String[] winner = new String[3];
     Type type;
     boolean partial;
 }
