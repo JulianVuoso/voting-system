@@ -23,7 +23,7 @@ public class InspectionServiceImpl implements InspectionService {
     // TODO: DEFINIR TIPO DE THREAD POOL Y SI TIENE LIMITE DE CANTIDAD
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
-    @Override
+//    @Override
     public void vote(InspectionVote vote) throws RemoteException {
         if (!started) started = true;
 
@@ -36,12 +36,12 @@ public class InspectionServiceImpl implements InspectionService {
     }
 
 //    @Override
-//    public void finishElection() throws RemoteException {
-//        started = false;
-//        System.out.println("Election finished");
-//        inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(this::sendElectionFinishedToInspector));
-//        inspectorHandlers.clear();
-//    }
+    public void finishElection() throws RemoteException {
+        started = false;
+        System.out.println("Election finished");
+        inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(this::sendElectionFinishedToInspector));
+        inspectorHandlers.clear();
+    }
 
     // TODO: VER SI TIENE QUE SER SYNC CON ALGO
     @Override

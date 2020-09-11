@@ -18,6 +18,13 @@ public class Server {
         final Remote remote = UnicastRemoteObject.exportObject(new ElectionServiceImpl(), 0);
 
         final Registry registry = LocateRegistry.getRegistry();
+        // TODO: RENAME IN CLIENT AND REMOVE service FROM HERE
         registry.rebind("service", remote);
+        registry.rebind("inspection-service", remote);
+        registry.rebind("management-service", remote);
+        registry.rebind("voting-service", remote);
+        registry.rebind("query-service", remote);
+
+        logger.info("Election Service bound");
     }
 }

@@ -1,3 +1,4 @@
+/*
 package ar.edu.itba.pod.tpe.client.tests;
 
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
@@ -38,3 +39,4 @@ public class TestInspectorClient {
 //        service.finishElection(); TODO fix here
     }
 }
+*/

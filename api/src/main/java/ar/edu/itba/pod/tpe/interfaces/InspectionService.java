@@ -15,7 +15,4 @@ public interface InspectionService extends Remote {
      * @throws RemoteException if any communication error occurs.
      */
     void inspect(int table, String party, VoteAvailableCallbackHandler handler) throws RemoteException, IllegalElectionStateException;
-
-    // STUB METHODS
-    void vote(InspectionVote vote) throws RemoteException;
 }
