@@ -46,136 +46,136 @@ public class TestCSVMaker {
         final Registry registry = LocateRegistry.getRegistry("127.0.0.1", 1099);
         final QueryService service = (QueryService) registry.lookup("service");
 
-        FPTP result = (FPTP) service.askState("JUNGLE");
+        STAR result = (STAR) service.askNational();
 
-        //if(!((FPTP) service.askNational()).getPartial()){
-            printFPTP("out.csv",result.getMap());
-        //}
+        printSTAR("out.csv",result);
 
-        /*try {
-            //CAMBIAR ESTE POR EL QUE VIENE EN ARGS
-            //CAMBIAR RESULTS POR EL QUE MANDA JV
-            writeCSV("out.csv", result);
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }*/
 
     }
 
-   /* private static void writeCSV(String file, Result results) throws  IOException {
-        if(results){
-            printFPTP(file,results);
-            return;
-        }
-        else{
-            switch (){
-                case Type.FPTP:
-                    printFPTP(file,results);
-                    break;
-                case Type.SPAV:
-                    printSPAV(file,(SPAV) results);
-                    break;
-                case Type.STAR:
-                    printSTAR(file,(STAR) results);
-                    printFPTP(file,results);
-                    break;
-            }
-        }
 
-    }*/
-
-    private static void printFPTP(String file, Map<String,Integer> results){
+    private static void printFPTP(String file, Result result){
         try {
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
             final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
                     .withHeader(PERCENTAGE_HEADER)
                     .withRecordSeparator('\n'));
 
-            for(String party : results.keySet()){
-                System.out.println(results.get(party));
-               /* DecimalFormat format = new DecimalFormat("##.00");*/
-               /* String percent = format.format(results.get(party) * 100) + "%";*/
-                try {
-                    csvPrinter.printRecord(100,party);
-                } catch (IOException e) {                                       
-                    e.printStackTrace();
-                }
-            }
-            /*results.entrySet().stream().sorted((o1, o2) -> {
+            FPTP results = (FPTP) result;
+
+            /** Armo el mapa con los porcentajes para despues ordenarlos y llenar el csv **/
+            Map<String, Double> fptpPerc = new HashMap<>();
+            int total=0;
+            for(Integer partyVotes : results.getMap().values())
+                total+=partyVotes;
+            for(String p : results.getMap().keySet())
+                fptpPerc.put(p, results.getMap().get(p).doubleValue() / total * 100);
+
+            /** Ordeno **/
+            fptpPerc.entrySet().stream().sorted((o1, o2) -> {
                 if (!o1.getValue().equals(o2.getValue()))
                     return Double.compare(o2.getValue(), o1.getValue());
                 return o1.getKey().compareTo(o2.getKey());
             }).forEach( r -> {
+                /** Lleno el csv **/
                 String party = r.getKey();
                 DecimalFormat format = new DecimalFormat("##.00");
-                String percent = format.format(r.getValue() * 100) + "%";
+                String percent = format.format(r.getValue()) + "%";
                 try {
                     csvPrinter.printRecord(percent, party);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            });*/
+            });
+            /** si ya esta terminada la votacion, imprimo el ganador **/
+            if(!results.getPartial()){
+                csvPrinter.printRecord("Winner");
+                csvPrinter.printRecord(results.getWinner());
+            }
             csvPrinter.flush();
         }
         catch (IOException e){
             System.err.println("Error while printing CSV file");
         }
-       /* if(!partial){
-            csvPrinter.printRecord("Winner");
 
-        }*/
     }
 
-    private static void printSTAR(String file, STAR results) {
+    private static void printSTAR(String file, Result result) {
         try {
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
             final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
                     .withHeader(SCORE_HEADER)
                     .withRecordSeparator('\n'));
 
+            /*STAR results = (STAR) result;
+
+            *//** Ordeno el mapa del primer round **//*
             results.getFirstRound().entrySet().stream().sorted((o1, o2) -> {
                 if (!o1.getValue().equals(o2.getValue()))
                     return Double.compare(o2.getValue(), o1.getValue());
                 return o1.getKey().compareTo(o2.getKey());
-            }).forEach(result -> {
-                String party = result.getKey();
-                DecimalFormat format = new DecimalFormat("##.00");
-                String percent = format.format(result.getValue() * 100) + "%";
+            }).forEach(r -> {
+                String party = r.getKey();
+                DecimalFormat format = new DecimalFormat("##");
+                String percent = format.format(r.getValue());
                 try {
                     csvPrinter.printRecord(percent, party);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
-            csvPrinter.flush();
+            csvPrinter.flush(); */
         }
         catch (IOException e){
             System.err.println("Error while printing CSV file");
         }
     }
 
-    private static void printSPAV(String file, SPAV results) {
+    private static void printSPAVRound(CSVPrinter csvPrinter, Map<String,Double> results, int round , String[] winners){
         try {
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
-            final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
-                    .withHeader(APPROVAL_HEADER)
-                    .withRecordSeparator('\n'));
-
-            results.getRound1().entrySet().stream().sorted((o1, o2) -> {
+            csvPrinter.printRecord(APPROVAL_HEADER);
+            results.entrySet().stream().sorted((o1, o2) -> {
                 if (!o1.getValue().equals(o2.getValue()))
                     return Double.compare(o2.getValue(), o1.getValue());
                 return o1.getKey().compareTo(o2.getKey());
             }).forEach(result -> {
                 String party = result.getKey();
                 DecimalFormat format = new DecimalFormat("##.00");
-                String percent = format.format(result.getValue() * 100) + "%";
+                String points = format.format(result.getValue());
                 try {
-                    csvPrinter.printRecord(percent, party);
+                    csvPrinter.printRecord(points, party);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
+            csvPrinter.printRecord("Winners");
+            StringBuilder stringBuilder = new StringBuilder(winners[0]);
+            for(int i = 1 ; i<round ; i++){
+                stringBuilder.append(", ").append(winners[i]);
+            }
+            csvPrinter.printRecord(stringBuilder);
+
+        }
+        catch (IOException e){
+            System.err.println("Error while printing CSV file");
+        }
+
+
+    }
+
+    private static void printSPAV(String file, SPAV results) {
+        try {
+            BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
+            final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
+                    .withRecordSeparator('\n'));
+
+            csvPrinter.printRecord("Round 1");
+            printSPAVRound(csvPrinter,results.getRound1(),1, results.getWinner());
+            csvPrinter.printRecord("Round 2");
+            printSPAVRound(csvPrinter,results.getRound2(),2, results.getWinner());
+            csvPrinter.printRecord("Round 3");
+            printSPAVRound(csvPrinter,results.getRound3(),3, results.getWinner());
+
             csvPrinter.flush();
         }
         catch (IOException e){

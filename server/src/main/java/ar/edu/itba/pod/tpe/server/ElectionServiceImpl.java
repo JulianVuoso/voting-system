@@ -153,20 +153,22 @@ public class ElectionServiceImpl implements ManagementService,
     @Override
     public Result askNational() throws RemoteException, QueryException {
         switch (status) {
-            case CLOSE: throw new QueryException("Polls already closed");
+            case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return natFptp;
-            default: return new STAR(firstSTAR(), secondSTAR());
+            case CLOSE: return new STAR(firstSTAR(), secondSTAR());
+            default: return null;
         }
     }
 
     @Override
     public Result askState(String state) throws RemoteException, QueryException {
         switch (status) {
-            case CLOSE: throw new QueryException("Polls already closed");
+            case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return stateFptp.get(state);
-            default:
+            case CLOSE:
                 String[] winners = new String[3];
                 Map<String, Double> round1 = spavIterator(state, null);
+
                 winners[0] = Collections.max(round1.entrySet(), Comparator.comparingDouble(Map.Entry::getValue)).getKey();
                 Map<String, Double> round2 = spavIterator(state, winners);
                 winners[1] = Collections.max(round2.entrySet(), Comparator.comparingDouble(Map.Entry::getValue)).getKey();
@@ -174,17 +176,20 @@ public class ElectionServiceImpl implements ManagementService,
                 winners[2] = Collections.max(round3.entrySet(), Comparator.comparingDouble(Map.Entry::getValue)).getKey();
 
                 return new SPAV(round1, round2, round3, winners);
+            default: return null;
         }
     }
 
     @Override
     public Result askTable(Integer table) throws RemoteException, QueryException {
         switch (status) {
-            case CLOSE: throw new QueryException("Polls already closed");
+            case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return tableFptp.get(table);
-            default: tableFptp.get(table).setPartial(false);     //  finished
+            case CLOSE:
+                tableFptp.get(table).setPartial(false);     //  finished
                 tableFptp.get(table).obtainWinner();
                 return tableFptp.get(table);
+            default: return null;
         }
     }
 
@@ -218,9 +223,9 @@ public class ElectionServiceImpl implements ManagementService,
 //        List<Vote> totalVotes = allVotes();
         Map<String, Integer> firstStar = new HashMap<>();
         for(Vote vote : allVotes()){
-            for(String party : vote.getSPAV(null).keySet()){
+            for(String party : vote.getSTAR().keySet()){
                 firstStar.putIfAbsent(party, 0);
-                firstStar.put(party, firstStar.get(party) + vote.getSPAV(null).get(party).intValue());
+                firstStar.put(party, firstStar.get(party) + vote.getSTAR().get(party));
             }
         }
         return firstStar;
@@ -235,16 +240,17 @@ public class ElectionServiceImpl implements ManagementService,
         aux.put(winner1, -1);
         String winner2 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
 
+        System.out.println("Winner 1: " + winner1 + "--- Winner 2: " + winner2);
         // winner 1 -> %
         // winner 2 -> %
-        String winnerAlpha = winner1.compareTo(winner2)<0 ? winner1:winner2;
+        String winnerAlpha = winner1.compareTo(winner2) < 0 ? winner1:winner2;
         for(Vote vote : allVotes()){
-            if(vote.getSPAV(null).get(winner1) > vote.getSPAV(null).get(winner2)){    // si en el voto w1 > w2
+            if(vote.getSTAR().get(winner1) > vote.getSTAR().get(winner2)){    // si en el voto w1 > w2
                 points.putIfAbsent(winner1, 0);                               // le sumo uno a w1 en el map
                 points.put(winner1, points.get(winner1)+1);
             }
             else{
-                if(vote.getSPAV(null).get(winner1) < vote.getSPAV(null).get(winner2)){
+                if(vote.getSTAR().get(winner1) < vote.getSTAR().get(winner2)){
                     points.putIfAbsent(winner2, 0);
                     points.put(winner2, points.get(winner2)+1);
                 }

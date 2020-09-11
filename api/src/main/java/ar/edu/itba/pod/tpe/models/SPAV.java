@@ -31,4 +31,8 @@ public class SPAV extends Result {
     public Map<String, Double> getRound3() {
         return round3;
     }
+
+    public String[] getWinner(){
+        return winner;
+    }
 }
