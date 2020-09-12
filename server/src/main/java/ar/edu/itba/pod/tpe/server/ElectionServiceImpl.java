@@ -15,6 +15,7 @@ import java.rmi.RemoteException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class ElectionServiceImpl implements ManagementService,
                                             InspectionService,
@@ -261,8 +262,19 @@ public class ElectionServiceImpl implements ManagementService,
                                                     1:(o1.getValue().equals(o2.getValue())?
                                                     (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
 
-        System.out.println(winner1);
-        System.out.println(winner2);
+        /*final String[] winners = aux.entrySet().stream()
+                .sorted((o1, o2) -> o1.getValue() > o2.getValue() ?
+                        1 : (o1.getValue().equals(o2.getValue()) ?
+                        (o2.getKey().compareTo(o1.getKey())) : -1))
+                .limit(2)
+                .map(Map.Entry::getKey)
+                .toArray(String[]::new);
+
+        for (String auxi : winners)
+            System.out.println(auxi);
+
+        System.out.println(winner1 + " o por otro " + winners[0]);
+        System.out.println(winner2 + " o por otro " + winners[1]);*/
 
         /*winner1 = "TIGER";
         winner2 = "BUFFALO";*/
@@ -303,3 +315,12 @@ public class ElectionServiceImpl implements ManagementService,
         return secondStar;
     }
 }
+
+/*
+    firstStar.putIfAbsent(party, 0);
+    firstStar.put(party, firstStar.get(party) + vote.getSTAR().get(party));
+
+    es equivalente a lo siguiente en todos los putIfAbsent
+        firstStar.put(party, firstStar.getOrDefault(party, 0) + vote.getSTAR().get(party));
+
+* */
