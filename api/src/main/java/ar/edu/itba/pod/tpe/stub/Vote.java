@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.tpe.stub;
+/*package ar.edu.itba.pod.tpe.stub;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -11,13 +11,13 @@ public class Vote implements Serializable {
     private Map<String,Integer> star;
     private String voteFPTP;
 
-    /**
+    *//**
      * table => número de mesa
      * state => provincia
      * star => Mapa con Key: nombre de partido, value: valor del voto
      *          si agarro el keyset me sirve para SPAV, y key-value me sirve para STAR
      * voteFPTP => String con nombre del partido ganador
-     */
+     *//*
 
     public Vote(Integer table, String state, Map<String, Integer> star, String voteFPTP) {
         this.table = table;
@@ -75,4 +75,4 @@ public class Vote implements Serializable {
         }
         return results;
     }
-}
+}*/

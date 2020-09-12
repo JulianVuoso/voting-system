@@ -46,9 +46,9 @@ public class TestCSVMaker {
         final Registry registry = LocateRegistry.getRegistry("127.0.0.1", 1099);
         final QueryService service = (QueryService) registry.lookup("service");
 
-        STAR result = (STAR) service.askNational();
+        FPTP result = (FPTP) service.askTable(1001);
 
-        printSTAR("outstar4.csv",result);
+        printFPTP("outspav4.csv",result);
 
 
     }
