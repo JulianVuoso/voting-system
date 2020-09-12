@@ -44,7 +44,7 @@ public class Vote implements Serializable {
 
     public Map<String, Double> getSPAV(String[] winners){
         Map<String, Double> results = new HashMap<>();
-        if(winners.length == 0){
+        if(winners == null || winners.length == 0){
             //si no hay ganadores anteriores => en el mapa van todos los de la boleta con valor 1
             for(String party : star.keySet() ){
                 results.put(party, 1d);

@@ -7,7 +7,6 @@ import ar.edu.itba.pod.tpe.interfaces.*;
 import ar.edu.itba.pod.tpe.models.*;
 import ar.edu.itba.pod.tpe.server.utils.Pair;
 import ar.edu.itba.pod.tpe.stub.InspectionVote;
-import ar.edu.itba.pod.tpe.stub.Vote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +32,9 @@ public class ElectionServiceImpl implements ManagementService,
     private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();
     private final Object voteLock = "voteLock";
 
-    FPTP natFptp = new FPTP();
-    Map<String, FPTP> stateFptp = new HashMap<>();
-    Map<Integer, FPTP> tableFptp = new HashMap<>();
+    private FPTP natFptp = new FPTP();
+    private Map<String, FPTP> stateFptp = new HashMap<>();
+    private Map<Integer, FPTP> tableFptp = new HashMap<>();
 
     public ElectionServiceImpl() {
         status = Status.UNDEFINED;
@@ -156,7 +155,7 @@ public class ElectionServiceImpl implements ManagementService,
         switch (status) {
             case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return natFptp;
-            case CLOSE: return new STAR(firstSTAR(), secondSTAR());
+            case CLOSE: return new STAR(allVotes());
             default: return null;
         }
     }
@@ -230,89 +229,6 @@ public class ElectionServiceImpl implements ManagementService,
                 totalVotes.addAll(list);
         }
         return totalVotes;
-    }
-
-    private Map<String, Integer> firstSTAR() {
-//        List<Vote> totalVotes = allVotes();
-        Map<String, Integer> firstStar = new HashMap<>();
-        for(Vote vote : allVotes()){
-            for(String party : vote.getSTAR().keySet()){
-                firstStar.putIfAbsent(party, 0);
-                firstStar.put(party, firstStar.get(party) + vote.getSTAR().get(party));
-            }
-        }
-        return firstStar;
-    }
-
-    private Map<String, Double> secondSTAR() {
-        Map<String, Integer> aux = firstSTAR();                // TODO: ver una forma mejor
-        Map<String, Double> secondStar = new HashMap<>();
-        Map<String, Integer> points = new HashMap<>();
-
-//        String winner1 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-        String winner1 = Collections.max(aux.entrySet(),
-                                            (o1, o2) -> o1.getValue() > o2.getValue()?
-                                                    1:(o1.getValue().equals(o2.getValue())?
-                                                    (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
-
-        aux.put(winner1, -1);
-        //String winner2 = Collections.max(aux.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-        String winner2 = Collections.max(aux.entrySet(),
-                                            (o1, o2) -> o1.getValue() > o2.getValue()?
-                                                    1:(o1.getValue().equals(o2.getValue())?
-                                                    (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
-
-        /*final String[] winners = aux.entrySet().stream()
-                .sorted((o1, o2) -> o1.getValue() > o2.getValue() ?
-                        1 : (o1.getValue().equals(o2.getValue()) ?
-                        (o2.getKey().compareTo(o1.getKey())) : -1))
-                .limit(2)
-                .map(Map.Entry::getKey)
-                .toArray(String[]::new);
-
-        for (String auxi : winners)
-            System.out.println(auxi);
-
-        System.out.println(winner1 + " o por otro " + winners[0]);
-        System.out.println(winner2 + " o por otro " + winners[1]);*/
-
-        /*winner1 = "TIGER";
-        winner2 = "BUFFALO";*/
-        // winner 1 -> %
-        // winner 2 -> %
-        String winnerAlpha = winner1.compareTo(winner2) < 0 ? winner1:winner2;
-        for(Vote vote : allVotes()) {
-
-            if (vote.getSTAR().get(winner1) != null && vote.getSTAR().get(winner2) != null) {
-                if (vote.getSTAR().get(winner1) > vote.getSTAR().get(winner2)) {    // si en el voto w1 > w2
-                    points.putIfAbsent(winner1, 0);                                 // le sumo uno a w1 en el map
-                    points.put(winner1, points.get(winner1) + 1);
-                } else {
-                    if (vote.getSTAR().get(winner1) < vote.getSTAR().get(winner2)) {
-                        points.putIfAbsent(winner2, 0);
-                        points.put(winner2, points.get(winner2) + 1);
-                    } else {
-                        points.putIfAbsent(winnerAlpha, 0);                       // si son iguales se lo sumo
-                        points.put(winnerAlpha, points.get(winnerAlpha) + 1);       // al menor alfabeticamente
-                    }
-                }
-            }
-            else{
-                if(vote.getSTAR().get(winner1) == null && vote.getSTAR().get(winner2) != null){
-                    points.putIfAbsent(winner2, 0);
-                    points.put(winner2, points.get(winner2) + 1);
-                }
-                else if(vote.getSTAR().get(winner1) != null && vote.getSTAR().get(winner2) == null){
-                    points.putIfAbsent(winner1, 0);                               // le sumo uno a w1 en el map
-                    points.put(winner1, points.get(winner1) + 1);
-                }
-            }
-        }
-        int total = points.get(winner1) + points.get(winner2);
-        secondStar.put(winner1, points.get(winner1).doubleValue() / total * 100);
-        secondStar.put(winner2, 100 - secondStar.get(winner1));
-
-        return secondStar;
     }
 }
 
