@@ -2,6 +2,7 @@ package ar.edu.itba.pod.tpe.server;
 
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.ManagementService;
+import ar.edu.itba.pod.tpe.interfaces.QueryService;
 import ar.edu.itba.pod.tpe.interfaces.VotingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,8 +27,7 @@ public class Server {
         registry.rebind(InspectionService.class.getName(), remote);
         registry.rebind(ManagementService.class.getName(), remote);
         registry.rebind(VotingService.class.getName(), remote);
-        // TODO: CHANGE TO QueryService.class.getName()
-        registry.rebind("query-service", remote);
+        registry.rebind(QueryService.class.getName(), remote);
 
         logger.info("Election Service bound");
     }

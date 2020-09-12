@@ -1,7 +1,6 @@
 package ar.edu.itba.pod.tpe.interfaces;
 
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
-import ar.edu.itba.pod.tpe.stub.InspectionVote;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

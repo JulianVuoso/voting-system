@@ -6,7 +6,6 @@ import ar.edu.itba.pod.tpe.exceptions.QueryException;
 import ar.edu.itba.pod.tpe.interfaces.*;
 import ar.edu.itba.pod.tpe.models.*;
 import ar.edu.itba.pod.tpe.server.utils.Pair;
-import ar.edu.itba.pod.tpe.stub.InspectionVote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +13,6 @@ import java.rmi.RemoteException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 public class ElectionServiceImpl implements ManagementService,
                                             InspectionService,
@@ -32,11 +30,13 @@ public class ElectionServiceImpl implements ManagementService,
     private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();
     private final Object voteLock = "voteLock";
 
-    // TODO: VER SI SE PUEDE JUNTAR CON LOS RESULTADOS FINALES
-    // TODO: AGREGAR RES FINALES A VARIABLES
+    // TODO: VER SI SE PUEDE JUNTAR CON LOS RESULTADOS FINALES usando Result
     private FPTP natFptp = new FPTP();
     private Map<String, FPTP> stateFptp = new HashMap<>();
     private Map<Integer, FPTP> tableFptp = new HashMap<>();
+
+    private STAR natStar = null;
+    private Map<String, SPAV> stateSPAV = new HashMap<>();
 
     public ElectionServiceImpl() {
         status = Status.UNDEFINED;
@@ -147,7 +147,10 @@ public class ElectionServiceImpl implements ManagementService,
         switch (status) {
             case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return natFptp;
-            case CLOSE: return new STAR(allVotes());
+            case CLOSE:
+                if (natStar == null)
+                    natStar = new STAR(allVotes());
+                return natStar;
             default: return null;
         }
     }
@@ -158,7 +161,9 @@ public class ElectionServiceImpl implements ManagementService,
             case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return stateFptp.get(state);
             case CLOSE:
-                return new SPAV(stateVotes(state));
+                if (!stateSPAV.containsKey(state))
+                    stateSPAV.put(state, new SPAV(stateVotes(state)));
+                return stateSPAV.get(state);
             default: return null;
         }
     }
