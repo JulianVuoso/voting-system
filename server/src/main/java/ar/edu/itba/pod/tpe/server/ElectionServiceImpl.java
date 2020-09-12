@@ -32,6 +32,8 @@ public class ElectionServiceImpl implements ManagementService,
     private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();
     private final Object voteLock = "voteLock";
 
+    // TODO: VER SI SE PUEDE JUNTAR CON LOS RESULTADOS FINALES
+    // TODO: AGREGAR RES FINALES A VARIABLES
     private FPTP natFptp = new FPTP();
     private Map<String, FPTP> stateFptp = new HashMap<>();
     private Map<Integer, FPTP> tableFptp = new HashMap<>();
@@ -177,8 +179,8 @@ public class ElectionServiceImpl implements ManagementService,
             case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return tableFptp.get(table);
             case CLOSE:
-                tableFptp.get(table).setPartial(false);     //  finished
-                tableFptp.get(table).obtainWinner();
+                tableFptp.get(table).setPartial(false);     //  finished --> Calculates winner
+//                tableFptp.get(table).obtainWinner();
                 return tableFptp.get(table);
             default: return null;
         }

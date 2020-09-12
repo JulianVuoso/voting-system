@@ -6,8 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FPTP extends Result {
+    private static final long serialVersionUID = 8511167759635565855L;
 
-    Map<String, Integer> fptp;
+    private Map<String, Integer> fptp;
 
     public FPTP( Map<String, Integer> fptp, boolean partial, Type type) {
         this.fptp = fptp;
@@ -37,16 +38,28 @@ public class FPTP extends Result {
 
     public void setPartial(boolean partial){
         this.partial = partial;
+        if (!partial) {
+            this.winner[0] = Collections.max(fptp.entrySet(),
+                    (o1, o2) -> o1.getValue() > o2.getValue()?
+                            1:(o1.getValue().equals(o2.getValue())?
+                            (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
+        }
     }
 
     /** Check **/
     public void obtainWinner(){
        // this.winner[0] = Collections.max(fptp.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-        this.winner[0] = Collections.max(fptp.entrySet(), (o1, o2) -> o1.getValue() > o2.getValue()? 1:-1).getKey();
+        this.winner[0] = Collections.max(fptp.entrySet(),
+                (o1, o2) -> o1.getValue() > o2.getValue()?
+                        1:(o1.getValue().equals(o2.getValue())?
+                        (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
     }
 
     public String getWinner(){
-        winner[0] = Collections.max(fptp.entrySet(), (o1, o2) -> o1.getValue() > o2.getValue()? 1:-1).getKey();
+//        winner[0] = Collections.max(fptp.entrySet(),
+//                (o1, o2) -> o1.getValue() > o2.getValue()?
+//                        1:(o1.getValue().equals(o2.getValue())?
+//                        (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
         return winner[0];
     }
 
