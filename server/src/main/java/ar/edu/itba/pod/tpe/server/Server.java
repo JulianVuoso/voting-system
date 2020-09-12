@@ -1,5 +1,8 @@
 package ar.edu.itba.pod.tpe.server;
 
+import ar.edu.itba.pod.tpe.interfaces.InspectionService;
+import ar.edu.itba.pod.tpe.interfaces.ManagementService;
+import ar.edu.itba.pod.tpe.interfaces.VotingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +23,10 @@ public class Server {
         final Registry registry = LocateRegistry.getRegistry();
         // TODO: RENAME IN CLIENT AND REMOVE service FROM HERE
         registry.rebind("service", remote);
-        registry.rebind("inspection-service", remote);
-        registry.rebind("management-service", remote);
-        registry.rebind("voting-service", remote);
+        registry.rebind(InspectionService.class.getName(), remote);
+        registry.rebind(ManagementService.class.getName(), remote);
+        registry.rebind(VotingService.class.getName(), remote);
+        // TODO: CHANGE TO QueryService.class.getName()
         registry.rebind("query-service", remote);
 
         logger.info("Election Service bound");
