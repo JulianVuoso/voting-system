@@ -11,7 +11,7 @@ public class STAR extends Result {
     public STAR(Map<String, Integer> firstRound, Map<String, Double> secondRound) {
         this.firstRound = firstRound;
         this.secondRound = secondRound;
-        this.winner[0] = Collections.max(firstRound.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
+        this.winner[0] = Collections.max(secondRound.entrySet(), Comparator.comparingDouble(Map.Entry::getValue)).getKey();
         this.partial= false;
         this.type = Type.STAR;
     }
