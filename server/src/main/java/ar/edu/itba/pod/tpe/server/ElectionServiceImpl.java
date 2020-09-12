@@ -73,18 +73,6 @@ public class ElectionServiceImpl implements ManagementService,
         return status;
     }
 
-    @Override
-    public void vote(InspectionVote vote) throws RemoteException {
-        if (status != Status.OPEN) status = Status.OPEN;
-
-        final Pair<String, Integer> inspectLocation = new Pair<>(vote.getFptpVote(), vote.getTableNumber());
-        Optional.ofNullable(inspectorHandlers.get(inspectLocation))
-                .ifPresent(handlerList -> handlerList.forEach(this::sendNotificationToInspector));
-
-        // REGISTER VOTE
-        System.out.println("Vote registered: " + vote);
-    }
-
     // TODO: VER SI TIENE QUE SER SYNC CON ALGO
     @Override
     public void inspect(int table, String party, VoteAvailableCallbackHandler handler) throws RemoteException, IllegalElectionStateException {
@@ -123,6 +111,12 @@ public class ElectionServiceImpl implements ManagementService,
         if (status != Status.OPEN) {
             throw new IllegalElectionStateException("Solo se puede votar si los comicios están abiertos");
         }
+
+        // Check if there are inspectors registered to that table and FPTP candidate
+        final Pair<String, Integer> inspectLocation = new Pair<>(vote.getVoteFPTP(), vote.getTable());
+        Optional.ofNullable(inspectorHandlers.get(inspectLocation))
+                .ifPresent(handlerList -> handlerList.forEach(this::sendNotificationToInspector));
+
         String state = vote.getState();
         Integer table = vote.getTable();
         synchronized (voteLock){

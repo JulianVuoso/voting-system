@@ -48,16 +48,16 @@ public class ManagementClient {
         try {
             switch (action) {
                 case "open":
-                    System.out.println("Election" + service.open().toString().toLowerCase());
+                    System.out.println("Election " + service.open().toString().toLowerCase());
                     break;
                 case "close":
-                    System.out.println("Election" + service.close().toString().toLowerCase());
+                    System.out.println("Election " + service.close().toString().toLowerCase());
                     break;
-                case "status":
-                    System.out.println("Election is" + service.status().toString().toLowerCase());
+                case "state":
+                    System.out.println("Election is " + service.status().toString().toLowerCase());
                     break;
                 default:
-                    System.err.println("Invalid action name, possible options: open, close, status");
+                    System.err.println("Invalid action name, possible options: open, close, state");
             }
         } catch (ManagementException e) {
             System.err.println("Error trying to " + action + ", " + e.getMessage());
