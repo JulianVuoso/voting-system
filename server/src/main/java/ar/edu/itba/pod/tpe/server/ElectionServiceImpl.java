@@ -166,28 +166,7 @@ public class ElectionServiceImpl implements ManagementService,
             case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return stateFptp.get(state);
             case CLOSE:
-                String[] winners = new String[3];
-                Map<String, Double> round1 = spavIterator(state, null);
-
-
-                winners[0] = Collections.max(round1.entrySet(),
-                                (o1, o2) -> o1.getValue() > o2.getValue()?
-                                     1:(o1.getValue().equals(o2.getValue())?
-                                        (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
-
-                Map<String, Double> round2 = spavIterator(state, winners);
-                winners[1] = Collections.max(round2.entrySet(),
-                        (o1, o2) -> o1.getValue() > o2.getValue()?
-                                1:(o1.getValue().equals(o2.getValue())?
-                                (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
-
-                Map<String, Double> round3 = spavIterator(state, winners);
-                winners[2] = Collections.max(round3.entrySet(),
-                                (o1, o2) -> o1.getValue() > o2.getValue()?
-                                     1:(o1.getValue().equals(o2.getValue())?
-                                    (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
-
-                return new SPAV(round1, round2, round3, winners);
+                return new SPAV(stateVotes(state));
             default: return null;
         }
     }
@@ -205,23 +184,6 @@ public class ElectionServiceImpl implements ManagementService,
         }
     }
 
-    private Map<String, Double> spavIterator(String state, String[] winners){
-        List<Vote> stateVotes = new ArrayList<>();
-        for(List<Vote> list : votes.get(state).values())        // me quedo con todos los votos del state
-            stateVotes.addAll(list);
-
-        Map<String, Double> spavRound = new HashMap<>();
-        for(Vote vote : stateVotes){                                // por cada voto
-            Map<String, Double> mapVote = vote.getSPAV(winners);    // obtengo su party -> puntaje
-            Set<String> parties = mapVote.keySet();                 // y por cada party
-            for(String party : parties){
-                spavRound.putIfAbsent(party, 0.0);                  // le sumo al map general tal puntaje
-                spavRound.put(party, spavRound.get(party) + mapVote.get(party));
-            }
-        }
-        return spavRound;
-    }
-
     private List<Vote> allVotes(){
         List<Vote> totalVotes = new ArrayList<>();
         for(Map<Integer, List<Vote>> vote : votes.values()){
@@ -229,6 +191,13 @@ public class ElectionServiceImpl implements ManagementService,
                 totalVotes.addAll(list);
         }
         return totalVotes;
+    }
+
+    private List<Vote> stateVotes(String state) {
+        List<Vote> stateVotes = new ArrayList<>();
+        for(List<Vote> list : votes.get(state).values())        // me quedo con todos los votos del state
+            stateVotes.addAll(list);
+        return stateVotes;
     }
 }
 

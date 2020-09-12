@@ -2,7 +2,9 @@ package ar.edu.itba.pod.tpe.models;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Vote implements Serializable {
 
@@ -51,26 +53,20 @@ public class Vote implements Serializable {
             }
         }
         else{
+            Set<String> parties = new HashSet<>(star.keySet());
             // ya hubo ganadores en las rondas anteriores
             int winnersMatching = 1;
             for(String w : winners){
                 //me fijo cuantos de los ganadores hay en la boleta y los sumo en winnersMatching
                 if(star.containsKey(w)){
                     winnersMatching++;
+                    parties.remove(w);
                 }
             }
             // Agrego los partidos y respectivos puntajes al nuevo mapa
             // sin tener en cuenta el/los ganador/es anterior/es
-            for( String party : star.keySet()){
-                boolean isWinner = false;
-                for(String w : winners){
-                    if (party.equals(w) && !isWinner) {
-                        isWinner = true;
-                    }
-                }
-                if(!isWinner){
-                    results.put(party,(double) 1/winnersMatching);
-                }
+            for( String party : parties){
+                results.put(party, 1.0 / winnersMatching);
             }
         }
         return results;
