@@ -32,9 +32,7 @@ public class InspectorClient {
     private static int tableNumber;
     private static String partyName;
 
-    // TODO: Que hacer si salta alguna de esas excepciones? Las dejamos lanzadas
-    //  --> es un embole capturarlas siempre salvo super try catch que cubra everything
-    public static void main(String[] args) throws RemoteException, NotBoundException {
+    public static void main(String[] args) {
         logger.info("tpe1-g6 InspectorClient Starting ...");
 
         try {
@@ -47,6 +45,18 @@ public class InspectorClient {
 
         logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + tableNumber + " - " + partyName);
 
+        try {
+            clientInspect();
+        } catch (RemoteException e) {
+            System.err.println("Remote communication failed.");
+            System.exit(ERROR_STATUS);
+        } catch (NotBoundException e) {
+            System.err.println("Server " + INSPECTION_SERVICE_NAME + " has no associated binding.");
+            System.exit(ERROR_STATUS);
+        }
+    }
+
+    private static void clientInspect() throws RemoteException, NotBoundException {
         final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
         final InspectionService service = (InspectionService) registry.lookup(INSPECTION_SERVICE_NAME);
 
