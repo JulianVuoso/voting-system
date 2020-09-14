@@ -6,7 +6,6 @@ import ar.edu.itba.pod.tpe.interfaces.VotingService;
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.models.Vote;
-import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,7 @@ public class VotingClient {
         logger.info("tpe1-g6 Voting Client Starting ...");
 
         try {
-            argumentParsing(args);
+            argumentParsing();
         } catch (ArgumentException e) {
             System.err.println(e.getMessage());
             System.exit(ERROR_STATUS);
@@ -91,16 +90,11 @@ public class VotingClient {
     }
 
 
-    private static void argumentParsing(String[] args) throws ArgumentException {
+    private static void argumentParsing() throws ArgumentException {
         // -DserverAddress=xx.xx.xx.xx:yyyy        --> host:port
         // -DvotesPath=fileName                    --> file.csv
 
-        Properties properties;
-        try {
-            properties = ClientUtils.getDProperties(args);
-        } catch (ParseException e) {
-            throw new ArgumentException("Params format must be -Dproperty=value");
-        }
+        Properties properties = System.getProperties();
 
         try {
             serverAddress = ClientUtils.getInetAddress(properties.getProperty(SERVER_ADDRESS_PARAM));

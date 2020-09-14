@@ -5,7 +5,6 @@ import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
 import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.VoteAvailableCallbackHandler;
-import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,13 +32,11 @@ public class InspectorClient {
     private static int tableNumber;
     private static String partyName;
 
-    // TODO: Que hacer si salta alguna de esas excepciones? Las dejamos lanzadas
-    //  --> es un embole capturarlas siempre salvo super try catch que cubra everything
-    public static void main(String[] args) throws RemoteException, NotBoundException {
+    public static void main(String[] args) {
         logger.info("tpe1-g6 InspectorClient Starting ...");
 
         try {
-            argumentParsing(args);
+            argumentParsing();
         } catch (ArgumentException e) {
             System.err.println(e.getMessage());
             System.exit(ERROR_STATUS);
@@ -48,6 +45,18 @@ public class InspectorClient {
 
         logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + tableNumber + " - " + partyName);
 
+        try {
+            clientInspect();
+        } catch (RemoteException e) {
+            System.err.println("Remote communication failed.");
+            System.exit(ERROR_STATUS);
+        } catch (NotBoundException e) {
+            System.err.println("Server " + INSPECTION_SERVICE_NAME + " has no associated binding.");
+            System.exit(ERROR_STATUS);
+        }
+    }
+
+    private static void clientInspect() throws RemoteException, NotBoundException {
         final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
         final InspectionService service = (InspectionService) registry.lookup(INSPECTION_SERVICE_NAME);
 
@@ -63,17 +72,12 @@ public class InspectorClient {
         }
     }
 
-    private static void argumentParsing(String[] args) throws ArgumentException {
+    private static void argumentParsing() throws ArgumentException {
         // -DserverAddress=xx.xx.xx.xx:yyyy    --> host:port
         // -Did=​ pollingPlaceNumber            --> tableNumber
         // -Dparty=​ partyName                  --> partyName
 
-        Properties properties;
-        try {
-            properties = ClientUtils.getDProperties(args);
-        } catch (ParseException e) {
-            throw new ArgumentException("Params format must be -Dproperty=value");
-        }
+        Properties properties = System.getProperties();
 
         try {
             serverAddress = ClientUtils.getInetAddress(properties.getProperty(SERVER_ADDRESS_PARAM));
