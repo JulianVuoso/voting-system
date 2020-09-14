@@ -1,40 +1,220 @@
 package ar.edu.itba.pod.tpe.client;
 
-import ar.edu.itba.pod.tpe.exceptions.QueryException;
+import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
+import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
+import ar.edu.itba.pod.tpe.client.utils.ThrowableBiConsumer;
+import ar.edu.itba.pod.tpe.client.utils.TriConsumer;
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
-import ar.edu.itba.pod.tpe.models.FPTP;
-import ar.edu.itba.pod.tpe.models.Result;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import ar.edu.itba.pod.tpe.models.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 public class QueryClient {
-    private static Logger logger = LoggerFactory.getLogger(QueryClient.class);
 
-    public static void main(String[] args) throws RemoteException, NotBoundException {
-        logger.info("tpe1-g6 QueryClient Starting ...");
+    private static final String SERVER_ADDRESS_PARAM = "serverAddress";
+    private static final String FILE_PATH_PARAM = "outPath";
+    private static final String ID_PARAM = "id";
+    private static final String STATE_PARAM = "state";
 
-        final Registry registry = LocateRegistry.getRegistry("127.0.0.1", 1099);
-        final QueryService service = (QueryService) registry.lookup("inspection-service");
+
+    private static InetSocketAddress serverAddress;
+    private static String path;
+    private static String state;
+    private static Integer table;
+
+    private static final String PERCENTAGE_HEADER = "Percentage;Party";
+    private static final String APPROVAL_HEADER = "Approval;Party";
+    private static final String SCORE_HEADER = "Score;Party";
+
+
+    public static void main(String[] args) throws RemoteException, NotBoundException, ArgumentException {
+
+        argumentParsing();
+
+        final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
+        final QueryService service = (QueryService) registry.lookup(QueryService.class.getName());
+
+        FPTP result1 = (FPTP) service.askTable(1001);
+
+        printFPTP(path,result1);
+
+        Result result;
+        if (state != null) result = service.askState(state);
+        else if (table != null) result = service.askTable(table);
+        else result = service.askNational();
+
+
+
+    }
+
+
+    private static TriConsumer<String, Result, ThrowableBiConsumer<Result, CSVPrinter, IOException>> func = (file, result, biConsumer) -> {
+        try {
+            // Opens csv printer
+            BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
+            final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
+                    .withRecordSeparator('\n'));
+
+            // Applies function to result and writes on the csv
+            biConsumer.accept(result, csvPrinter);
+
+            // Closes the csv printer
+            csvPrinter.flush();
+        } catch (IOException e){
+            System.err.println("Error while printing CSV file");
+        }
+    };
+
+
+
+
+    private static void printFPTP(String file, Result result) {
+        final ThrowableBiConsumer<Result, CSVPrinter, IOException> print = (res, printer) -> {
+            FPTP results = (FPTP) res;
+
+            // Print FPTP header, sort and fill csv with results
+            printer.printRecord(PERCENTAGE_HEADER);
+            results.getPercentagesMap()
+                    .entrySet()
+                    .stream()
+                    .sorted(sortDoubleMap)
+                    .forEach(r -> fillCSVDouble.accept(r, printer, true));
+
+            // Print winner if final result
+            if(!results.isPartial()) {
+                printer.printRecord("Winner");
+                printer.printRecord(results.getWinner());
+            }
+        };
+
+       func.accept(file, result, print);
+    }
+
+    private static void printSTAR(String file, Result result) {
+        final ThrowableBiConsumer<Result, CSVPrinter, IOException> print = (res, printer) -> {
+            STAR results = (STAR) res;
+
+            // Print STAR score header, sort and fill csv with first round results
+            printer.printRecord(SCORE_HEADER);
+            results.getFirstRound().entrySet().stream().sorted(sortIntegerMap).forEach(r -> fillCSVInteger.accept(r, printer));
+
+            // Print STAR percentage header, sort and fill csv with second round results
+            printer.printRecord(PERCENTAGE_HEADER);
+            results.getSecondRound().entrySet().stream().sorted(sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, printer, true));
+
+            // Print winner
+            printer.printRecord("Winner");
+            printer.printRecord(results.getWinner());
+
+        };
+
+        func.accept(file, result, print);
+    }
+
+    private static void printSPAV(String file, Result result) {
+        final ThrowableBiConsumer<Result, CSVPrinter, IOException> print = (res, printer) -> {
+            SPAV results = (SPAV) res;
+
+            printSPAVRound(printer, results.getRound1(),1, results.getWinner());
+            printSPAVRound(printer, results.getRound2(),2, results.getWinner());
+            printSPAVRound(printer, results.getRound3(),3, results.getWinner());
+        };
+
+        func.accept(file, result, print);
+    }
+
+    private static void printSPAVRound(CSVPrinter csvPrinter, Map<String,Double> results, int round, String[] winners) throws IOException {
+        // Print SPAV approval header
+        csvPrinter.printRecord("Round " + round);
+        csvPrinter.printRecord(APPROVAL_HEADER);
+        results.entrySet().stream().sorted(sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, csvPrinter, false));
+
+        // Print winners
+        csvPrinter.printRecord("Winners");
+        StringBuilder stringBuilder = new StringBuilder(winners[0]);
+        IntStream.range(1, round).forEach(n -> stringBuilder.append(", ").append(winners[n]));
+        csvPrinter.printRecord(stringBuilder);
+    }
+
+    private static void argumentParsing() throws ArgumentException {
+        // -DserverAddress=xx.xx.xx.xx:yyyy        --> host:port
+        // -Dstate=stateName       (not required)  --> state
+        // -Did=pollingPlaceNumber (not required)  --> type of query
+        // -DoutPath=fileName                      --> fileName.csv (out)
+
+        Properties properties = System.getProperties();
 
         try {
-            FPTP fptp = (FPTP) service.askTable(5);
-            Map<String, Double> fptpPerc = new HashMap<>();
-            int total=0;
-            for(Integer partyVotes : fptp.getVotes().values())
-                total+=partyVotes;
-            for(String party : fptp.getVotes().keySet())
-                fptpPerc.put(party, fptp.getVotes().get(party).doubleValue() / total * 100);
+            serverAddress = ClientUtils.getInetAddress(properties.getProperty(SERVER_ADDRESS_PARAM));
+        } catch (URISyntaxException e) {
+            throw new ArgumentException("Server Address must be supplied using -DserverAddress and its format must be xx.xx.xx.xx:yyyy");
+        }
 
-        } catch (QueryException e) {
+        path = properties.getProperty(FILE_PATH_PARAM);
+        if (path == null) {
+            throw new ArgumentException("Path must be supplied using -DoutPath");
+        }
 
+        state = properties.getProperty(STATE_PARAM);
+
+        String aux = properties.getProperty(ID_PARAM);
+        if (aux != null) {
+            try {
+                table = Integer.parseInt(aux);
+            } catch (NumberFormatException e) {
+                throw new ArgumentException("Invalid -Did. Id is not a valid number");
+            }
+        }
+
+        if (state != null && table != null) {
+            throw new ArgumentException("Specify only a state through -Dstate or a table number through -Did. Do not specify both");
         }
     }
+
+
+    private static final TriConsumer<Map.Entry<String, Double>, CSVPrinter, Boolean> fillCSVDouble = (results, printer, b) -> {
+        String party = results.getKey();
+        DecimalFormat format = new DecimalFormat("##.00");
+        String percent = format.format(results.getValue()) + ((b)? "%" : "");
+        try {
+            printer.printRecord(percent, party);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    };
+
+
+    private static final BiConsumer<Map.Entry<String, Integer>, CSVPrinter> fillCSVInteger = (results, printer) -> {
+        String party = results.getKey();
+        DecimalFormat format = new DecimalFormat("##");
+        String percent = format.format(results.getValue());
+        try {
+            printer.printRecord(percent, party);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    };
+
+    private static final Comparator<Map.Entry<String, Double>> sortDoubleMap = Map.Entry.<String, Double>comparingByValue().thenComparing(Map.Entry.comparingByKey());
+    private static final Comparator<Map.Entry<String, Integer>> sortIntegerMap = Map.Entry.<String, Integer>comparingByValue().thenComparing(Map.Entry.comparingByKey());
+
+
+
 }

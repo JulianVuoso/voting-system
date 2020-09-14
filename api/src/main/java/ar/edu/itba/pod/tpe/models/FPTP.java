@@ -1,69 +1,75 @@
 package ar.edu.itba.pod.tpe.models;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FPTP extends Result {
     private static final long serialVersionUID = 8511167759635565855L;
 
-    private Map<String, Integer> fptp;
+    private Map<String, Integer> map;
+    private Integer total;
 
-    public FPTP( Map<String, Integer> fptp, boolean partial, Type type) {
-        this.fptp = fptp;
-        this.partial = partial;
-        this.type = type;
-    }
-
-    public FPTP (){
-        this.fptp = new HashMap<>();
+    /**
+     * Constructor sets defaults.
+     */
+    public FPTP() {
+        this.map = new HashMap<>();
         this.partial = true;
         this.type = Type.FPTP;
+        this.total = 0;
     }
 
-    public FPTP (String party){
-        this.fptp = new HashMap<>();
-        this.fptp.put(party,1);
-
+    /**
+     * Adds a vote given the party winner.
+     * @param party The required party to add a vote.
+     */
+    public void addVote(String party) {
+        map.put(party, map.getOrDefault(party, 0) + 1);
+        total++;
     }
 
-    public boolean getPartial(){
-        return partial;
+    /**
+     * Gets a map with the percentage for each party.
+     * @return The result map.
+     */
+    public Map<String, Double> getPercentagesMap() {
+        return map
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().doubleValue() / total * 100));
     }
 
-    public Map<String, Integer> getMap(){
-        return fptp;
+    /**
+     * Sets the the Result to final and calculates the winner.
+     */
+    public void setFinal() {
+        this.partial = false;
+        this. winner[0] = calculateWinner();
     }
 
-    public void setPartial(boolean partial){
-        this.partial = partial;
-        if (!partial) {
-            this.winner[0] = Collections.max(fptp.entrySet(),
-                    (o1, o2) -> o1.getValue() > o2.getValue()?
-                            1:(o1.getValue().equals(o2.getValue())?
-                            (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
-        }
+    /**
+     * Calculates the winner given the collection.
+     * @return The winner.
+     */
+    private String calculateWinner() {
+        return Collections.max(map.entrySet(),
+                (o1, o2) -> {
+                    if (!o1.getValue().equals(o2.getValue()))
+                        return Integer.compare(o2.getValue(), o1.getValue());
+                    return o1.getKey().compareTo(o2.getKey());
+                }).getKey();
     }
 
-    /** Check **/
-    public void obtainWinner(){
-       // this.winner[0] = Collections.max(fptp.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
-        this.winner[0] = Collections.max(fptp.entrySet(),
-                (o1, o2) -> o1.getValue() > o2.getValue()?
-                        1:(o1.getValue().equals(o2.getValue())?
-                        (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
-    }
-
-    public String getWinner(){
-//        winner[0] = Collections.max(fptp.entrySet(),
-//                (o1, o2) -> o1.getValue() > o2.getValue()?
-//                        1:(o1.getValue().equals(o2.getValue())?
-//                        (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
+    /**
+     * Gets the FPTP final winner.
+     * @return String for the FPTP final winner.
+     */
+    public String getWinner() {
         return winner[0];
     }
 
-    public Map<String, Integer> getVotes(){
-        return fptp;
-    }
 }

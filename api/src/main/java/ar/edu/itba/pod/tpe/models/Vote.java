@@ -21,6 +21,13 @@ public class Vote implements Serializable {
      * voteFPTP => String con nombre del partido ganador
      */
 
+    /**
+     *
+     * @param table Table number
+     * @param state State name
+     * @param star Map with party name as key, and vote value as value
+     * @param voteFPTP Name of the winning party
+     */
     public Vote(Integer table, String state, Map<String, Integer> star, String voteFPTP) {
         this.table = table;
         this.state = state;

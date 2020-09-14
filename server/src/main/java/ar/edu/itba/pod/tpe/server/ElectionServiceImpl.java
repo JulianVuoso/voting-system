@@ -14,33 +14,48 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ElectionServiceImpl implements ManagementService,
-                                            InspectionService,
-                                                VotingService,
-                                                QueryService {
+public class ElectionServiceImpl implements ManagementService, InspectionService, VotingService, QueryService {
 
     private static Logger logger = LoggerFactory.getLogger(ElectionServiceImpl.class);
 
     private Status status;
-    private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers = new HashMap<>();
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private Map<String, Map<Integer, List<Vote>>> votes;
 
-    private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();
+    private ExecutorService executorService;
+
+    private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers;
+
     private final Object voteLock = "voteLock";
 
-    // TODO: VER SI SE PUEDE JUNTAR CON LOS RESULTADOS FINALES usando Result
-    //  Ver si moviendo la logica dentro de FPTP se puede
-    private FPTP natFptp = new FPTP();
-    private Map<String, FPTP> stateFptp = new HashMap<>();
-    private Map<Integer, FPTP> tableFptp = new HashMap<>();
+    // TODO: check if can merge with final results using Result (maybe moving logic inside FPTP)
+    private FPTP national;
+    private Map<String, FPTP> state;
+    private Map<Integer, FPTP> table;
 
-    private STAR natStar = null;
-    private Map<String, SPAV> stateSPAV = new HashMap<>();
+    private STAR natStar;
+    private Map<String, SPAV> stateSPAV;
 
     public ElectionServiceImpl() {
-        status = Status.UNDEFINED;
+        status = Status.REGISTRATION;
+        inspectorHandlers = new HashMap<>();
+        executorService = Executors.newFixedThreadPool(4);
+        votes = new HashMap<>();
+
+        // Initialize partial results for national, state and table
+        national = new FPTP();
+        state = new HashMap<>();
+        table = new HashMap<>();
+
+        // Initialize final results for national and state
+        natStar = null;
+        stateSPAV = new HashMap<>();
     }
+
+
+    /**
+     * Management Service exposed methods.
+     **/
 
     @Override
     public Status open() throws RemoteException, ManagementException {
@@ -57,7 +72,7 @@ public class ElectionServiceImpl implements ManagementService,
     public Status close() throws RemoteException, ManagementException {
         // TODO: ADD SYNC TO SWITCH
         switch (status) {
-            case UNDEFINED: throw new ManagementException("the poll has not been opened yet");
+            case REGISTRATION: throw new ManagementException("the poll has not been opened yet");
             case CLOSE: throw new ManagementException("the poll is already close");
             default: status = Status.CLOSE;
         }
@@ -74,10 +89,14 @@ public class ElectionServiceImpl implements ManagementService,
         return status;
     }
 
-    // TODO: VER SI TIENE QUE SER SYNC CON ALGO
+
+    /**
+     * ManaInspector Service exposed methods.
+     **/
+
     @Override
     public void inspect(int table, String party, VoteAvailableCallbackHandler handler) throws RemoteException, IllegalElectionStateException {
-        if (status != Status.UNDEFINED) {
+        if (status != Status.REGISTRATION) {
             throw new IllegalElectionStateException("Solo se puede registrar un fiscal antes de que comience la elección");
         }
         final Pair<String, Integer> keyPair = new Pair<>(party, table);
@@ -86,27 +105,10 @@ public class ElectionServiceImpl implements ManagementService,
         inspectorHandlers.get(keyPair).add(handler);
     }
 
-    private void sendNotificationToInspector(final VoteAvailableCallbackHandler handler, final Pair<String, Integer> inspectLocation) {
-        executorService.submit(() -> {
-            try {
-                handler.voteRegistered();
-            } catch (RemoteException e) {
-                logger.error("Could not send notification to Inspector. Removing it...");
-                // TODO: ADD inspectorHandlers SYNC HERE
-                inspectorHandlers.get(inspectLocation).remove(handler);
-            }
-        });
-    }
 
-    private void sendElectionFinishedToInspector(final VoteAvailableCallbackHandler handler) {
-        executorService.submit(() -> {
-            try {
-                handler.electionFinished();
-            } catch (RemoteException e) {
-                // Do nothing
-            }
-        });
-    }
+    /**
+     * Vote Service exposed methods.
+     **/
 
     @Override
     public void vote(Vote vote) throws RemoteException, IllegalElectionStateException {
@@ -128,15 +130,13 @@ public class ElectionServiceImpl implements ManagementService,
             votes.get(state).get(table).add(vote);
         }
 
-        // NACIONAL: voto que entra, voto que se suma al mapa general FPTP
-        natFptp.getMap().put(vote.getVoteFPTP(), natFptp.getMap().getOrDefault(vote.getVoteFPTP(), 0) + 1);
+        national.addVote(vote.getVoteFPTP());
 
-        stateFptp.putIfAbsent(vote.getState(), new FPTP());                                     // STATE: si es el primer voto de esa provincia le agrego un FPTP
-        stateFptp.get(vote.getState()).getMap().put(vote.getVoteFPTP(), stateFptp.get(vote.getState()).getMap().getOrDefault(vote.getVoteFPTP(), 0) + 1);
+        this.state.putIfAbsent(vote.getState(), new FPTP());
+        this.state.get(vote.getState()).addVote(vote.getVoteFPTP());
 
-        // Luego obtengo ese FPTP y le meto en key Party 1 voto mas
-        tableFptp.putIfAbsent(vote.getTable(), new FPTP());                                     // TABLE: same a state
-        tableFptp.get(vote.getTable()).getMap().put(vote.getVoteFPTP(), tableFptp.get(vote.getTable()).getMap().getOrDefault(vote.getVoteFPTP(), 0) + 1);
+        this.table.putIfAbsent(vote.getTable(), new FPTP());
+        this.table.get(vote.getTable()).addVote(vote.getVoteFPTP());
 
         // Check if there are inspectors registered to that table and FPTP candidate
         final Pair<String, Integer> inspectLocation = new Pair<>(vote.getVoteFPTP(), vote.getTable());
@@ -144,16 +144,19 @@ public class ElectionServiceImpl implements ManagementService,
                 .ifPresent(handlerList -> handlerList.forEach(h -> sendNotificationToInspector(h, inspectLocation)));
     }
 
+    /**
+     * Query Service exposed methods.
+     **/
 
     @Override
     public Result askNational() throws RemoteException, QueryException {
-        if(status == Status.UNDEFINED)
+        if(status == Status.REGISTRATION)
             throw new QueryException("Polls already closed");
         if(allVotes().isEmpty())
             throw new QueryException("No Votes");
 
         switch (status) {
-            case OPEN: return natFptp;
+            case OPEN: return national;
             case CLOSE:
                 if (natStar == null)
                     natStar = new STAR(allVotes());
@@ -164,13 +167,13 @@ public class ElectionServiceImpl implements ManagementService,
 
     @Override
     public Result askState(String state) throws RemoteException, QueryException {
-        if(status == Status.UNDEFINED)
+        if(status == Status.REGISTRATION)
             throw new QueryException("Polls already closed");
         if(votes.get(state).values().isEmpty())
             throw new QueryException("No Votes");
 
         switch (status) {
-            case OPEN: return stateFptp.get(state);
+            case OPEN: return this.state.get(state);
             case CLOSE:
                 if (!stateSPAV.containsKey(state))
                     stateSPAV.put(state, new SPAV(stateVotes(state)));
@@ -181,18 +184,47 @@ public class ElectionServiceImpl implements ManagementService,
 
     @Override
     public Result askTable(Integer table) throws RemoteException, QueryException {
-        if(status == Status.UNDEFINED)
+        if(status == Status.REGISTRATION)
             throw new QueryException("Polls already closed");
         if(emptyTable(table))
             throw new QueryException("No Votes");
 
         switch (status) {
-            case OPEN: return tableFptp.get(table);
+            case OPEN: return this.table.get(table);
             case CLOSE:
-                tableFptp.get(table).setPartial(false);         //  finished --> Calculates winner and set as final
-                return tableFptp.get(table);
+                this.table.get(table).setFinal();         //  finished --> Calculates winner and set as final
+                return this.table.get(table);
             default: return null;
         }
+    }
+
+
+
+    /**
+     * Private auxiliary methods.
+     **/
+
+
+    private void sendNotificationToInspector(final VoteAvailableCallbackHandler handler, final Pair<String, Integer> inspectLocation) {
+        executorService.submit(() -> {
+            try {
+                handler.voteRegistered();
+            } catch (RemoteException e) {
+                logger.error("Could not send notification to Inspector. Removing it...");
+                // TODO: ADD inspectorHandlers SYNC HERE
+                inspectorHandlers.get(inspectLocation).remove(handler);
+            }
+        });
+    }
+
+    private void sendElectionFinishedToInspector(final VoteAvailableCallbackHandler handler) {
+        executorService.submit(() -> {
+            try {
+                handler.electionFinished();
+            } catch (RemoteException e) {
+                // Do nothing
+            }
+        });
     }
 
     private List<Vote> allVotes(){
