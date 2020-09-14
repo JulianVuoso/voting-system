@@ -9,6 +9,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
@@ -54,11 +55,9 @@ public class TestCSVMaker {
 
 
     private static void printFPTP(String file, Result result){
-        try {
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
-            final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
-                    .withHeader(PERCENTAGE_HEADER)
-                    .withRecordSeparator('\n'));
+        try (final CSVPrinter csvPrinter = new CSVPrinter(new FileWriter(file), CSVFormat.newFormat(';')
+                .withHeader(PERCENTAGE_HEADER)
+                .withRecordSeparator('\n'))) {
 
             FPTP results = (FPTP) result;
 
@@ -100,11 +99,9 @@ public class TestCSVMaker {
     }
 
     private static void printSTAR(String file, Result result) {
-        try {
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
-            final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
-                    .withHeader(SCORE_HEADER)
-                    .withRecordSeparator('\n'));
+        try (final CSVPrinter csvPrinter = new CSVPrinter(new FileWriter(file), CSVFormat.newFormat(';')
+                .withHeader(SCORE_HEADER)
+                .withRecordSeparator('\n'))) {
 
             STAR results = (STAR) result;
 
@@ -183,10 +180,8 @@ public class TestCSVMaker {
     }
 
     private static void printSPAV(String file, SPAV results) {
-        try {
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
-            final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
-                    .withRecordSeparator('\n'));
+        try (final CSVPrinter csvPrinter = new CSVPrinter(new FileWriter(file), CSVFormat.newFormat(';')
+                .withRecordSeparator('\n'))) {
 
             csvPrinter.printRecord("Round 1");
             printSPAVRound(csvPrinter,results.getRound1(),1, results.getWinner());
