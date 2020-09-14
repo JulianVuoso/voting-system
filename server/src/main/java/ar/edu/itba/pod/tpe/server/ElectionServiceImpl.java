@@ -150,10 +150,9 @@ public class ElectionServiceImpl implements ManagementService,
     public Result askNational() throws RemoteException, QueryException {
         if(status == Status.UNDEFINED)
             throw new QueryException("Polls already closed");
-/**       private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();        **/
-
         if(allVotes().isEmpty())
             throw new QueryException("No Votes");
+
         switch (status) {
             case OPEN: return natFptp;
             case CLOSE:
@@ -168,6 +167,8 @@ public class ElectionServiceImpl implements ManagementService,
     public Result askState(String state) throws RemoteException, QueryException {
         if(status == Status.UNDEFINED)
             throw new QueryException("Polls already closed");
+        if(votes.get(state).values().isEmpty())
+            throw new QueryException("No Votes");
 
         switch (status) {
             case OPEN: return stateFptp.get(state);
@@ -183,12 +184,13 @@ public class ElectionServiceImpl implements ManagementService,
     public Result askTable(Integer table) throws RemoteException, QueryException {
         if(status == Status.UNDEFINED)
             throw new QueryException("Polls already closed");
+        if(emptyTable(table))
+            throw new QueryException("No Votes");
 
         switch (status) {
             case OPEN: return tableFptp.get(table);
             case CLOSE:
-                tableFptp.get(table).setPartial(false);     //  finished --> Calculates winner
-//                tableFptp.get(table).obtainWinner();
+                tableFptp.get(table).setPartial(false);         //  finished --> Calculates winner and set as final
                 return tableFptp.get(table);
             default: return null;
         }
@@ -205,17 +207,17 @@ public class ElectionServiceImpl implements ManagementService,
 
     private List<Vote> stateVotes(String state) {
         List<Vote> stateVotes = new ArrayList<>();
-        for(List<Vote> list : votes.get(state).values())        // me quedo con todos los votos del state
+        for(List<Vote> list : votes.get(state).values())        // save every state votes and return list
             stateVotes.addAll(list);
         return stateVotes;
     }
+
+    private boolean emptyTable(Integer table){
+        boolean emptyTable = true;
+        for(Map<Integer, List<Vote>> maps : votes.values()){
+            if(!maps.get(table).isEmpty())
+                emptyTable = false;
+        }
+        return emptyTable;
+    }
 }
-
-/*
-    firstStar.putIfAbsent(party, 0);
-    firstStar.put(party, firstStar.get(party) + vote.getSTAR().get(party));
-
-    es equivalente a lo siguiente en todos los putIfAbsent
-        firstStar.put(party, firstStar.getOrDefault(party, 0) + vote.getSTAR().get(party));
-
-* */
