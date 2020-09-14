@@ -18,14 +18,19 @@ public class ManagementClient {
 
     private static Logger logger = LoggerFactory.getLogger(ManagementClient.class);
 
-    private static final int ERROR_STATUS = 1;
-
+    /**
+     * Params values and argument error
+     */
     private static final String SERVER_ADDRESS_PARAM = "serverAddress";
     private static final String ACTION_PARAM = "action";
-    private static String SERVICE_NAME = "service";
+    private static final int ERROR_STATUS = 1;
 
+    /**
+     * Properties brought from parameters
+     */
     private static InetSocketAddress serverAddress;
     private static String action;
+
 
     public static void main(String[] args) throws Exception {
         logger.info("tpe1-g6 Administration Client Starting ...");
@@ -41,7 +46,7 @@ public class ManagementClient {
         logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + action);
 
         final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
-        final ManagementService service = (ManagementService) registry.lookup(SERVICE_NAME);
+        final ManagementService service = (ManagementService) registry.lookup(ManagementService.class.getName());
 
 
         try {
@@ -63,6 +68,10 @@ public class ManagementClient {
         }
     }
 
+    /**
+     * Parses arguments from terminal
+     * @throws ArgumentException
+     */
     private static void argumentParsing() throws ArgumentException {
         // -DserverAddress=xx.xx.xx.xx:yyyy     --> host:port
         // -Daction=action                      --> action
