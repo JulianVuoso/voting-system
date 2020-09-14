@@ -213,11 +213,10 @@ public class ElectionServiceImpl implements ManagementService,
     }
 
     private boolean emptyTable(Integer table){
-        boolean emptyTable = true;
         for(Map<Integer, List<Vote>> maps : votes.values()){
             if(!maps.get(table).isEmpty())
-                emptyTable = false;
+                return false;
         }
-        return emptyTable;
+        return true;
     }
 }
