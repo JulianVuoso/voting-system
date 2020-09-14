@@ -68,13 +68,16 @@ public class ManagementClient {
         }
     }
 
+
     /**
+     * Ex.
+     * -DserverAddress=xx.xx.xx.xx:yyyy     --> host:port
+     * -Daction=action                      --> action
+     *
      * Parses arguments from terminal
      * @throws ArgumentException
      */
     private static void argumentParsing() throws ArgumentException {
-        // -DserverAddress=xx.xx.xx.xx:yyyy     --> host:port
-        // -Daction=action                      --> action
 
         Properties properties = System.getProperties();
 
@@ -84,6 +87,6 @@ public class ManagementClient {
             throw new ArgumentException("Server Address must be supplied using -DserverAddress and its format must be xx.xx.xx.xx:yyyy");
         }
 
-        action = Optional.ofNullable(properties.getProperty(ACTION_PARAM)).orElseThrow(new ArgumentException("Party Name must be supplied using -Daction"));
+        action = Optional.ofNullable(properties.getProperty(ACTION_PARAM)).orElseThrow(new ArgumentException("Action name must be supplied using -Daction"));
     }
 }
