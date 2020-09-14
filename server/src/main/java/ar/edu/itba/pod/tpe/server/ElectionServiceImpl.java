@@ -24,9 +24,7 @@ public class ElectionServiceImpl implements ManagementService,
     private Status status;
     private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers = new HashMap<>();
 
-    // TODO: DEFINIR TIPO DE THREAD POOL Y SI TIENE LIMITE DE CANTIDAD --> 10, ver que espere y no lo rebote
-    //  Ver los otros tipos de pool, el fixed tiene para limite
-    private ExecutorService executorService = Executors.newCachedThreadPool();
+    private ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();
     private final Object voteLock = "voteLock";
@@ -88,13 +86,14 @@ public class ElectionServiceImpl implements ManagementService,
         inspectorHandlers.get(keyPair).add(handler);
     }
 
-    private void sendNotificationToInspector(final VoteAvailableCallbackHandler handler) {
+    private void sendNotificationToInspector(final VoteAvailableCallbackHandler handler, final Pair<String, Integer> inspectLocation) {
         executorService.submit(() -> {
             try {
                 handler.voteRegistered();
             } catch (RemoteException e) {
-                logger.error("Could not send notification to Inspector");
-                // FIXME: DEBERIA DESREGISTRARLO?? --> Preguntar --> Sleep, reintento, mato
+                logger.error("Could not send notification to Inspector. Removing it...");
+                // TODO: ADD inspectorHandlers SYNC HERE
+                inspectorHandlers.get(inspectLocation).remove(handler);
             }
         });
     }
@@ -142,7 +141,7 @@ public class ElectionServiceImpl implements ManagementService,
         // Check if there are inspectors registered to that table and FPTP candidate
         final Pair<String, Integer> inspectLocation = new Pair<>(vote.getVoteFPTP(), vote.getTable());
         Optional.ofNullable(inspectorHandlers.get(inspectLocation))
-                .ifPresent(handlerList -> handlerList.forEach(this::sendNotificationToInspector));
+                .ifPresent(handlerList -> handlerList.forEach(h -> sendNotificationToInspector(h, inspectLocation)));
     }
 
 
