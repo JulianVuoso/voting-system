@@ -124,7 +124,4 @@ public class VotingClient {
 
         path = Optional.ofNullable(properties.getProperty(FILE_PATH_PARAM)).orElseThrow(new ArgumentException("Path must be supplied using -DvotesPath"));
     }
-
-
-
 }
