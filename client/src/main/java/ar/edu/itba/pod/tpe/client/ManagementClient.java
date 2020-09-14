@@ -4,7 +4,6 @@ import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.interfaces.ManagementService;
-import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +31,7 @@ public class ManagementClient {
         logger.info("tpe1-g6 Administration Client Starting ...");
 
         try {
-            argumentParsing(args);
+            argumentParsing();
         } catch (ArgumentException e) {
             System.err.println(e.getMessage());
             System.exit(ERROR_STATUS);
@@ -64,16 +63,11 @@ public class ManagementClient {
         }
     }
 
-    private static void argumentParsing(String[] args) throws ArgumentException {
+    private static void argumentParsing() throws ArgumentException {
         // -DserverAddress=xx.xx.xx.xx:yyyy     --> host:port
         // -Daction=action                      --> action
 
-        Properties properties;
-        try {
-            properties = ClientUtils.getDProperties(args);
-        } catch (ParseException e) {
-            throw new ArgumentException("Params format must be -Dproperty=value");
-        }
+        Properties properties = System.getProperties();
 
         try {
             serverAddress = ClientUtils.getInetAddress(properties.getProperty(SERVER_ADDRESS_PARAM));

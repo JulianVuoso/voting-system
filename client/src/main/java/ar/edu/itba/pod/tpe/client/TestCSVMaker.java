@@ -1,11 +1,10 @@
-package ar.edu.itba.pod.tpe;
+package ar.edu.itba.pod.tpe.client;
 
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
 import ar.edu.itba.pod.tpe.interfaces.VotingService;
 import ar.edu.itba.pod.tpe.models.*;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -203,18 +202,13 @@ public class TestCSVMaker {
         }
     }
 
-/*    private static void argumentParsing(String[] args) throws ArgumentException {
+/*    private static void argumentParsing() throws ArgumentException {
         // -DserverAddress=xx.xx.xx.xx:yyyy        --> host:port
         // -Dstate=stateName       (not required)  --> state
         // -Did=pollingPlaceNumber (not required)  --> type of query
         // -DoutPath=fileName                      --> fileName.csv (out)
 
-        Properties properties;
-        try {
-            properties = ClientUtils.getDProperties(args);
-        } catch (ParseException e) {
-            throw new ArgumentException("Params format must be -Dproperty=value");
-        }
+        Properties properties = System.getProperties();
 
         try {
             serverAddress = ClientUtils.getInetAddress(properties.getProperty(SERVER_ADDRESS_PARAM));
