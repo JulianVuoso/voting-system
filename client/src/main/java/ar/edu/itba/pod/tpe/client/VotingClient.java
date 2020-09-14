@@ -18,20 +18,22 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class VotingClient {
-    private static Logger logger = LoggerFactory.getLogger(VotingClient.class);
-    private static final int ERROR_STATUS = 1;
 
+    private static Logger logger = LoggerFactory.getLogger(VotingClient.class);
+
+    /**
+     * Params values and argument error
+     */
     private static final String SERVER_ADDRESS_PARAM = "serverAddress";
     private static final String FILE_PATH_PARAM = "votesPath";
+    private static final int ERROR_STATUS = 1;
 
-    private static final String VOTING_SERVICE_NAME = "service";
-
+    /**
+     * Properties brought from parameters
+     */
     private static InetSocketAddress serverAddress;
     private static String path;
 
@@ -47,8 +49,10 @@ public class VotingClient {
             return;
         }
 
+        logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + path);
+
         final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
-        final VotingService service = (VotingService) registry.lookup(VOTING_SERVICE_NAME);
+        final VotingService service = (VotingService) registry.lookup(VotingService.class.getName());
 
         try {
             List<String> file = Files.readAllLines(Paths.get(path) );
@@ -60,10 +64,17 @@ public class VotingClient {
 
     }
 
+
     /**
-     *   1000;JUNGLE;TIGER|3,LEOPARD|2,LYNX|1;TIGER
-     *   1001;JUNGLE;LYNX|1,TIGER|1,LEOPARD|2;LYNX
-     *   1002;SAVANNAH;TIGER|3,LYNX|3,OWL|3,BUFFALO|5;BUFFALO
+     * Ex.
+     * 1000;JUNGLE;TIGER|3,LEOPARD|2,LYNX|1;TIGER
+     * 1001;JUNGLE;LYNX|1,TIGER|1,LEOPARD|2;LYNX
+     * 1002;SAVANNAH;TIGER|3,LYNX|3,OWL|3,BUFFALO|5;BUFFALO
+     *
+     * Parses the given file and emits a vote
+     * @param file The file to be parsed.
+     * @param service Voting services to emmit a new vote.
+     * @throws
      **/
     private static void parseFile(List<String> file, VotingService service) throws RemoteException, IllegalElectionStateException {
         for(String line : file ){
@@ -77,8 +88,12 @@ public class VotingClient {
 
 
     /**
-     * Aca recibo algo como:
-     *              LYNX|1,TIGER|1,LEOPARD|2
+     * Ex.
+     * LYNX|1,TIGER|1,LEOPARD|2
+     *
+     * Parses a line to create a Vote.
+     * @param voteLine The vote line to be parsed.
+     * @return A map with the parties voted and their rating.
      */
     private static Map<String, Integer> parseVotes(String voteLine) {
         Map<String, Integer> votes = new HashMap<>();
@@ -90,10 +105,15 @@ public class VotingClient {
     }
 
 
+    /**
+     * Ex.
+     * -DserverAddress=xx.xx.xx.xx:yyyy        --> host:port
+     * -DvotesPath=fileName                    --> file.csve
+     *
+     * Parses arguments from terminal
+     * @throws ArgumentException
+     */
     private static void argumentParsing() throws ArgumentException {
-        // -DserverAddress=xx.xx.xx.xx:yyyy        --> host:port
-        // -DvotesPath=fileName                    --> file.csv
-
         Properties properties = System.getProperties();
 
         try {
@@ -102,10 +122,7 @@ public class VotingClient {
             throw new ArgumentException("Server Address must be supplied using -DserverAddress and its format must be xx.xx.xx.xx:yyyy");
         }
 
-        path = properties.getProperty(FILE_PATH_PARAM);
-        if (path == null) {
-            throw new ArgumentException("Path must be supplied using -DvotesPath");
-        }
+        path = Optional.ofNullable(properties.getProperty(FILE_PATH_PARAM)).orElseThrow(new ArgumentException("Path must be supplied using -DvotesPath"));
     }
 
 
