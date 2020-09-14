@@ -24,13 +24,15 @@ public class ElectionServiceImpl implements ManagementService,
     private Status status;
     private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers = new HashMap<>();
 
-    // TODO: DEFINIR TIPO DE THREAD POOL Y SI TIENE LIMITE DE CANTIDAD
+    // TODO: DEFINIR TIPO DE THREAD POOL Y SI TIENE LIMITE DE CANTIDAD --> 10, ver que espere y no lo rebote
+    //  Ver los otros tipos de pool, el fixed tiene para limite
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
     private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();
     private final Object voteLock = "voteLock";
 
     // TODO: VER SI SE PUEDE JUNTAR CON LOS RESULTADOS FINALES usando Result
+    //  Ver si moviendo la logica dentro de FPTP se puede
     private FPTP natFptp = new FPTP();
     private Map<String, FPTP> stateFptp = new HashMap<>();
     private Map<Integer, FPTP> tableFptp = new HashMap<>();
@@ -55,6 +57,7 @@ public class ElectionServiceImpl implements ManagementService,
 
     @Override
     public Status close() throws RemoteException, ManagementException {
+        // TODO: ADD SYNC TO SWITCH
         switch (status) {
             case UNDEFINED: throw new ManagementException("the poll has not been opened yet");
             case CLOSE: throw new ManagementException("the poll is already close");
@@ -80,6 +83,7 @@ public class ElectionServiceImpl implements ManagementService,
             throw new IllegalElectionStateException("Solo se puede registrar un fiscal antes de que comience la elección");
         }
         final Pair<String, Integer> keyPair = new Pair<>(party, table);
+        // TODO: ADD SYNC HERE
         inspectorHandlers.computeIfAbsent(keyPair, k -> new ArrayList<>()); // If keyPair not present, put(keyPair, new ArrayList()
         inspectorHandlers.get(keyPair).add(handler);
     }
@@ -90,7 +94,7 @@ public class ElectionServiceImpl implements ManagementService,
                 handler.voteRegistered();
             } catch (RemoteException e) {
                 logger.error("Could not send notification to Inspector");
-                // FIXME: DEBERIA DESREGISTRARLO?? --> Preguntar
+                // FIXME: DEBERIA DESREGISTRARLO?? --> Preguntar --> Sleep, reintento, mato
             }
         });
     }
@@ -108,23 +112,19 @@ public class ElectionServiceImpl implements ManagementService,
     @Override
     public void vote(Vote vote) throws RemoteException, IllegalElectionStateException {
         /* TODO: Check Syncro */
-        if (status != Status.OPEN) {
-            throw new IllegalElectionStateException("Solo se puede votar si los comicios están abiertos");
-        }
-
-        // Check if there are inspectors registered to that table and FPTP candidate
-        final Pair<String, Integer> inspectLocation = new Pair<>(vote.getVoteFPTP(), vote.getTable());
-        Optional.ofNullable(inspectorHandlers.get(inspectLocation))
-                .ifPresent(handlerList -> handlerList.forEach(this::sendNotificationToInspector));
-
         String state = vote.getState();
         Integer table = vote.getTable();
-        synchronized (voteLock){
-            if(!votes.containsKey(state)){
-                votes.put(state,new HashMap<>());
+
+        synchronized (voteLock) {
+            if (status != Status.OPEN) {
+                throw new IllegalElectionStateException("Solo se puede votar si los comicios están abiertos");
             }
-            if(!votes.get(state).containsKey(table)){
-                votes.get(state).put(table,new ArrayList<>());
+
+            if (!votes.containsKey(state)) {
+                votes.put(state, new HashMap<>());
+            }
+            if (!votes.get(state).containsKey(table)) {
+                votes.get(state).put(table, new ArrayList<>());
             }
             votes.get(state).get(table).add(vote);
         }
@@ -138,6 +138,11 @@ public class ElectionServiceImpl implements ManagementService,
         // Luego obtengo ese FPTP y le meto en key Party 1 voto mas
         tableFptp.putIfAbsent(vote.getTable(), new FPTP());                                     // TABLE: same a state
         tableFptp.get(vote.getTable()).getMap().put(vote.getVoteFPTP(), tableFptp.get(vote.getTable()).getMap().getOrDefault(vote.getVoteFPTP(), 0) + 1);
+
+        // Check if there are inspectors registered to that table and FPTP candidate
+        final Pair<String, Integer> inspectLocation = new Pair<>(vote.getVoteFPTP(), vote.getTable());
+        Optional.ofNullable(inspectorHandlers.get(inspectLocation))
+                .ifPresent(handlerList -> handlerList.forEach(this::sendNotificationToInspector));
     }
 
     /**       *************************************         **********************************           **/
