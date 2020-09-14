@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.tpe.client.tests;
+package ar.edu.itba.pod.tpe;
 
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
