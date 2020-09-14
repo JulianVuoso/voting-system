@@ -145,12 +145,16 @@ public class ElectionServiceImpl implements ManagementService,
                 .ifPresent(handlerList -> handlerList.forEach(this::sendNotificationToInspector));
     }
 
-    /**       *************************************         **********************************           **/
 
     @Override
     public Result askNational() throws RemoteException, QueryException {
+        if(status == Status.UNDEFINED)
+            throw new QueryException("Polls already closed");
+/**       private Map<String, Map<Integer, List<Vote>>> votes = new HashMap<>();        **/
+
+        if(allVotes().isEmpty())
+            throw new QueryException("No Votes");
         switch (status) {
-            case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return natFptp;
             case CLOSE:
                 if (natStar == null)
@@ -162,8 +166,10 @@ public class ElectionServiceImpl implements ManagementService,
 
     @Override
     public Result askState(String state) throws RemoteException, QueryException {
+        if(status == Status.UNDEFINED)
+            throw new QueryException("Polls already closed");
+
         switch (status) {
-            case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return stateFptp.get(state);
             case CLOSE:
                 if (!stateSPAV.containsKey(state))
@@ -175,8 +181,10 @@ public class ElectionServiceImpl implements ManagementService,
 
     @Override
     public Result askTable(Integer table) throws RemoteException, QueryException {
+        if(status == Status.UNDEFINED)
+            throw new QueryException("Polls already closed");
+
         switch (status) {
-            case UNDEFINED: throw new QueryException("Polls already closed");
             case OPEN: return tableFptp.get(table);
             case CLOSE:
                 tableFptp.get(table).setPartial(false);     //  finished --> Calculates winner
