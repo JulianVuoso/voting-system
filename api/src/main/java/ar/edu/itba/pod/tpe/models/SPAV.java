@@ -10,14 +10,49 @@ public class SPAV extends Result {
     private List<Map<String, Double>> rounds;
     public static final Integer maxRounds = 3;
 
+    private FPTP partialResult;
+
     /**
-     * Constructor sets defaults.
-     * @param votes Votes to fill the rounds.
+     * Constructor sets values to default.
      */
-    public SPAV(List<Vote> votes) {
+    public SPAV() {
         type = Type.SPAV;
         winners = new String[maxRounds];
+        partialResult = new FPTP();
         rounds = new ArrayList<>();
+    }
+
+    /**
+     * Adds a vote given the party winner.
+     * @param vote The vote to process.
+     */
+    public void addPartialVote(Vote vote) {
+        partialResult.addPartialVote(vote);
+    }
+
+    /**
+     * Checks if the partial result is empty.
+     * @return True if its empty, false otherwise.
+     */
+    public boolean isPartialEmpty() {
+        return partialResult.isEmpty();
+    }
+
+    /**
+     * Gets the partial result.
+     * @return Partial result in form of a FPTP.
+     */
+    public FPTP getPartialResult() {
+        return partialResult;
+    }
+
+    /**
+     * Sets the winners and stages given the list of votes.
+     * @param votes The final list of votes.
+     */
+    public void setFinal(List<Vote> votes) {
+        if (!partial) return;
+        partial = false;
 
         IntStream.range(0, maxRounds).forEach(n -> {
             rounds.add(n, fillRound(votes));

@@ -8,14 +8,48 @@ public class STAR extends Result {
     private Map<String, Integer> firstStage;
     private Map<String, Double> secondStage;
 
+    private FPTP partialResult;
 
     /**
-     * Constructor sets defaults.
-     * @param votes
+     * Constructor sets values to default.
      */
-    public STAR(List<Vote> votes) {
+    public STAR() {
         type = Type.STAR;
         winners = new String[1];
+        partialResult = new FPTP();
+    }
+
+    /**
+     * Adds a vote given the party winner.
+     * @param vote The vote to process.
+     */
+    public void addPartialVote(Vote vote) {
+        partialResult.addPartialVote(vote);
+    }
+
+    /**
+     * Checks if the partial result is empty.
+     * @return True if its empty, false otherwise.
+     */
+    public boolean isPartialEmpty() {
+        return partialResult.isEmpty();
+    }
+
+    /**
+     * Gets the partial result.
+     * @return Partial result in form of a FPTP.
+     */
+    public FPTP getPartialResult() {
+        return partialResult;
+    }
+
+    /**
+     * Sets the winners and stages given the list of votes.
+     * @param votes The final list of votes.
+     */
+    public void setFinal(List<Vote> votes) {
+        if (!partial) return;
+        partial = false;
 
         firstStage = fillFirstStage(votes);
         secondStage = fillSecondStage(votes);

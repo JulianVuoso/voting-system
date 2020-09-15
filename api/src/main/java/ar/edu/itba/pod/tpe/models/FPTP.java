@@ -16,7 +16,6 @@ public class FPTP extends Result {
      * Constructor sets defaults.
      */
     public FPTP() {
-        partial = true;
         type = Type.FPTP;
         winners = new String[1];
         map = new HashMap<>();
@@ -25,11 +24,11 @@ public class FPTP extends Result {
 
     /**
      * Adds a vote given the party winner.
-     * @param party The required party to add a vote.
+     * @param vote The vote to process.
      */
-    public synchronized void addVote(String party) {
+    public synchronized void addPartialVote(Vote vote) {
         if (partial) {
-            map.put(party, map.getOrDefault(party, 0) + 1);
+            map.put(vote.getWinner(), map.getOrDefault(vote.getWinner(), 0) + 1);
             total++;
         }
     }
@@ -47,10 +46,12 @@ public class FPTP extends Result {
 
     /**
      * Sets the the Result to final and calculates the winner.
+     * @param votes The list of votes.
      */
     public synchronized void setFinal(List<Vote> votes) {
         if (!partial) return;
         partial = false;
+
         map = votes.stream().collect(Collectors.groupingBy(Vote::getWinner, Collectors.reducing(0, e -> 1, Integer::sum)));
         winners[0] = Collections.max(map.entrySet(), sortIntegerMap).getKey();
     }

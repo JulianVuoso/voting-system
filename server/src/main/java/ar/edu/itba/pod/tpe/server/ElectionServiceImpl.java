@@ -25,13 +25,9 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers;
     private final Object voteLock = "voteLock", inspectorsLock = "inspectorLock", absentLock = "absentLock";
 
-    // TODO: check if can merge with final results using Result (maybe moving logic inside FPTP)
-    private FPTP nationalCount;
-    private Map<String, FPTP> stateMapCount;
+    private STAR nationalCount;
+    private Map<String, SPAV> stateMapCount;
     private Map<Integer, FPTP> tableMapCount;
-
-    private STAR natStar;
-    private Map<String, SPAV> stateSPAV;
 
     public ElectionServiceImpl() {
         status = Status.REGISTRATION;
@@ -39,14 +35,10 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
         executorService = Executors.newFixedThreadPool(4);
         votes = new Votes();
 
-        // Initialize partial results for national, state and table
-        nationalCount = new FPTP();
+        // Initialize results for national, state and table
+        nationalCount = new STAR();
         stateMapCount = new HashMap<>();
         tableMapCount = new HashMap<>();
-
-        // Initialize final results for national and state
-        natStar = null;
-        stateSPAV = new HashMap<>();
     }
 
 
@@ -94,13 +86,13 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
 
     /**
-     * ManaInspector Service exposed methods.
+     * Inspector Service exposed methods.
      **/
 
     @Override
     public void inspect(int table, String party, VoteAvailableCallbackHandler handler) throws RemoteException, IllegalElectionStateException {
         if (status != Status.REGISTRATION) {
-            throw new IllegalElectionStateException("Solo se puede registrar un fiscal antes de que comience la elección");
+            throw new IllegalElectionStateException("It is only possible to register an inspector before the voting starts");
         }
         final Pair<String, Integer> keyPair = new Pair<>(party, table);
         synchronized (inspectorsLock) {
@@ -116,13 +108,9 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
     @Override
     public void vote(Vote vote) throws RemoteException, IllegalElectionStateException {
-        /* TODO: Check Syncro */
-        String state = vote.getState();
-        Integer table = vote.getTable();
-
         synchronized (voteLock) {
             if (status != Status.OPEN) {
-                throw new IllegalElectionStateException("Solo se puede votar si los comicios están abiertos");
+                throw new IllegalElectionStateException("Vote it is only permitted while the election is open");
             }
             votes.addVote(vote);
 
@@ -133,13 +121,13 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
         }
 
         synchronized (absentLock) {
-            this.stateMapCount.putIfAbsent(vote.getState(), new FPTP());
-            this.tableMapCount.putIfAbsent(vote.getTable(), new FPTP());
+            stateMapCount.putIfAbsent(vote.getState(), new SPAV());
+            tableMapCount.putIfAbsent(vote.getTable(), new FPTP());
         }
 
-        nationalCount.addVote(vote.getWinner());
-        this.stateMapCount.get(vote.getState()).addVote(vote.getWinner());
-        this.tableMapCount.get(vote.getTable()).addVote(vote.getWinner());
+        nationalCount.addPartialVote(vote);
+        stateMapCount.get(vote.getState()).addPartialVote(vote);
+        tableMapCount.get(vote.getTable()).addPartialVote(vote);
     }
 
     /**
@@ -153,17 +141,16 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
         switch (status) {
             case OPEN:
-                if (nationalCount.isEmpty())
+                if (nationalCount.isPartialEmpty())
                     throw new QueryException("No Votes");
-                return nationalCount;
+                return nationalCount.getPartialResult();
             case CLOSE:
                 synchronized (voteLock) {
                     if (votes.isEmpty())
                         throw new QueryException("No Votes");
-                    if (natStar == null)
-                        natStar = new STAR(votes.getVoteList());
+                    nationalCount.setFinal(votes.getVoteList());
                 }
-                return natStar;
+                return nationalCount;
             default: return null;
         }
     }
@@ -175,17 +162,16 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
         switch (status) {
             case OPEN:
-                if (this.stateMapCount.get(state).isEmpty())
+                if (stateMapCount.get(state).isPartialEmpty())
                     throw new QueryException("No Votes");
-                return this.stateMapCount.get(state);
+                return stateMapCount.get(state).getPartialResult();
             case CLOSE:
                 synchronized (voteLock) {
                     if (votes.isStateEmpty(state))
                         throw new QueryException("No Votes");
-                    if (!stateSPAV.containsKey(state))
-                        stateSPAV.put(state, new SPAV(votes.getStateVoteList(state)));
+                    stateMapCount.get(state).setFinal(votes.getStateVoteList(state));
                 }
-                return stateSPAV.get(state);
+                return stateMapCount.get(state);
             default: return null;
         }
     }
