@@ -42,6 +42,12 @@ public class Votes {
         return stateVotes;
     }
 
+    // TODO: ADD getTableVoteList(tabe)
+
+    public boolean isEmpty() {
+        return votes.isEmpty();
+    }
+
     public boolean isStateEmpty(String state) { // TODO: should be fixed
         return votes.get(state).values().isEmpty();
     }

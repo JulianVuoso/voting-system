@@ -27,7 +27,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
     private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers;
 
-    private final Object voteLock = "voteLock";
+    private final Object voteLock = "voteLock", inspectorsLock = "inspectorLock", absentLock = "absentLock";
 
     // TODO: check if can merge with final results using Result (maybe moving logic inside FPTP)
     private FPTP national;
@@ -71,16 +71,22 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
     @Override
     public Status close() throws RemoteException, ManagementException {
-        // TODO: ADD SYNC TO SWITCH
-        switch (status) {
-            case REGISTRATION: throw new ManagementException("the poll has not been opened yet");
-            case CLOSE: throw new ManagementException("the poll is already close");
-            default: status = Status.CLOSE;
+        // TODO: REVISAR COMO voteLock puede ser FIFO
+        synchronized (voteLock) {
+            switch (status) {
+                case REGISTRATION: throw new ManagementException("the poll has not been opened yet");
+                case CLOSE: throw new ManagementException("the poll is already close");
+                default: status = Status.CLOSE;
+            }
         }
 
         // Kill all handlers
-        inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(this::sendElectionFinishedToInspector));
-        inspectorHandlers.clear();
+        synchronized (inspectorsLock) {
+            inspectorHandlers.values().forEach(handlerList -> handlerList.forEach(this::sendElectionFinishedToInspector));
+            inspectorHandlers.clear();
+        }
+        // Previously submitted tasks are executed, but no new tasks will be accepted
+        executorService.shutdown();
         logger.info("Election finished and all handlers killed");
         return Status.ENDED;
     }
@@ -101,9 +107,10 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
             throw new IllegalElectionStateException("Solo se puede registrar un fiscal antes de que comience la elección");
         }
         final Pair<String, Integer> keyPair = new Pair<>(party, table);
-        // TODO: ADD SYNC HERE
-        inspectorHandlers.computeIfAbsent(keyPair, k -> new ArrayList<>()); // If keyPair not present, put(keyPair, new ArrayList()
-        inspectorHandlers.get(keyPair).add(handler);
+        synchronized (inspectorsLock) {
+            inspectorHandlers.computeIfAbsent(keyPair, k -> new ArrayList<>()); // If keyPair not present, put(keyPair, new ArrayList()
+            inspectorHandlers.get(keyPair).add(handler);
+        }
     }
 
 
@@ -122,20 +129,23 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
                 throw new IllegalElectionStateException("Solo se puede votar si los comicios están abiertos");
             }
             votes.addVote(vote);
+
+            // Check if there are inspectors registered to that table and FPTP candidate
+            final Pair<String, Integer> inspectLocation = new Pair<>(vote.getWinner(), vote.getTable());
+            synchronized (inspectorsLock) {
+                Optional.ofNullable(inspectorHandlers.get(inspectLocation))
+                        .ifPresent(handlerList -> handlerList.forEach(h -> sendNotificationToInspector(h, inspectLocation)));
+            }
+        }
+
+        synchronized (absentLock) {
+            this.state.putIfAbsent(vote.getState(), new FPTP());
+            this.table.putIfAbsent(vote.getTable(), new FPTP());
         }
 
         national.addVote(vote.getWinner());
-
-        this.state.putIfAbsent(vote.getState(), new FPTP());
         this.state.get(vote.getState()).addVote(vote.getWinner());
-
-        this.table.putIfAbsent(vote.getTable(), new FPTP());
         this.table.get(vote.getTable()).addVote(vote.getWinner());
-
-        // Check if there are inspectors registered to that table and FPTP candidate
-        final Pair<String, Integer> inspectLocation = new Pair<>(vote.getWinner(), vote.getTable());
-        Optional.ofNullable(inspectorHandlers.get(inspectLocation))
-                .ifPresent(handlerList -> handlerList.forEach(h -> sendNotificationToInspector(h, inspectLocation)));
     }
 
     /**
@@ -145,15 +155,20 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     @Override
     public Result askNational() throws RemoteException, QueryException {
         if(status == Status.REGISTRATION)
-            throw new QueryException("Polls already closed");
-        if(votes.getVoteList().isEmpty()) // TODO: highly Inefficient
-            throw new QueryException("No Votes");
+            throw new QueryException("Polls not open");
 
         switch (status) {
-            case OPEN: return national;
+            case OPEN:
+                if (national.isEmpty())
+                    throw new QueryException("No Votes");
+                return national;
             case CLOSE:
-                if (natStar == null)
-                    natStar = new STAR(votes.getVoteList());
+                synchronized (voteLock) {
+                    if (votes.isEmpty())
+                        throw new QueryException("No Votes");
+                    if (natStar == null)
+                        natStar = new STAR(votes.getVoteList());
+                }
                 return natStar;
             default: return null;
         }
@@ -163,14 +178,19 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     public Result askState(String state) throws RemoteException, QueryException {
         if(status == Status.REGISTRATION)
             throw new QueryException("Polls already closed");
-        if(votes.isStateEmpty(state)) // TODO check syncro
-            throw new QueryException("No Votes");
 
         switch (status) {
-            case OPEN: return this.state.get(state);
+            case OPEN:
+                if (this.state.get(state).isEmpty())
+                    throw new QueryException("No Votes");
+                return this.state.get(state);
             case CLOSE:
-                if (!stateSPAV.containsKey(state))
-                    stateSPAV.put(state, new SPAV(votes.getStateVoteList(state)));
+                synchronized (voteLock) {
+                    if (votes.isStateEmpty(state))
+                        throw new QueryException("No Votes");
+                    if (!stateSPAV.containsKey(state))
+                        stateSPAV.put(state, new SPAV(votes.getStateVoteList(state)));
+                }
                 return stateSPAV.get(state);
             default: return null;
         }
@@ -180,13 +200,19 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     public Result askTable(Integer table) throws RemoteException, QueryException {
         if(status == Status.REGISTRATION)
             throw new QueryException("Polls already closed");
-        if(votes.isTableEmpty(table)) // TODO: check
-            throw new QueryException("No Votes");
 
         switch (status) {
-            case OPEN: return this.table.get(table);
+            case OPEN:
+                if (this.table.get(table).isEmpty())
+                    throw new QueryException("No Votes");
+                return this.table.get(table);
             case CLOSE:
-                this.table.get(table).setFinal();         //  finished --> Calculates winner and set as final
+                synchronized (voteLock) {
+                    if (votes.isTableEmpty(table))
+                        throw new QueryException("No Votes");
+                    // TODO Llamar a votes.getTableVotes(table)
+                    this.table.get(table).setFinal(votes.getVoteList());         //  finished --> Calculates winner and set as final
+                }
                 return this.table.get(table);
             default: return null;
         }
@@ -205,8 +231,10 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
                 handler.voteRegistered();
             } catch (RemoteException e) {
                 logger.error("Could not send notification to Inspector. Removing it...");
-                // TODO: ADD inspectorHandlers SYNC HERE
-                inspectorHandlers.get(inspectLocation).remove(handler);
+                synchronized (inspectorsLock) {
+                    if (inspectorHandlers.containsKey(inspectLocation))
+                        inspectorHandlers.get(inspectLocation).remove(handler);
+                }
             }
         });
     }

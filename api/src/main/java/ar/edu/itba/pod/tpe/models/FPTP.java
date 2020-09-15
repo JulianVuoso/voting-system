@@ -2,6 +2,7 @@ package ar.edu.itba.pod.tpe.models;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -9,8 +10,7 @@ public class FPTP extends Result {
     private static final long serialVersionUID = 8511167759635565855L;
 
     private Map<String, Integer> map;
-    private Integer total;
-
+    private int total;
 
     /**
      * Constructor sets defaults.
@@ -28,8 +28,10 @@ public class FPTP extends Result {
      * @param party The required party to add a vote.
      */
     public synchronized void addVote(String party) {
-        map.put(party, map.getOrDefault(party, 0) + 1);
-        total++;
+        if (partial) {
+            map.put(party, map.getOrDefault(party, 0) + 1);
+            total++;
+        }
     }
 
     /**
@@ -46,7 +48,8 @@ public class FPTP extends Result {
     /**
      * Sets the the Result to final and calculates the winner.
      */
-    public synchronized void setFinal() {
+    // TODO: PISAR LO QUE ESTABA CON VOTES
+    public synchronized void setFinal(List<Vote> votes) {
         partial = false;
         winners[0] = Collections.max(map.entrySet(), sortIntegerMap).getKey();
     }
@@ -59,4 +62,7 @@ public class FPTP extends Result {
         return winners[0];
     }
 
+    public synchronized boolean isEmpty() {
+        return total == 0;
+    }
 }
