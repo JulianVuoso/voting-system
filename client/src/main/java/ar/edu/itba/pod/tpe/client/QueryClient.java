@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -25,7 +24,6 @@ import java.rmi.registry.Registry;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 public class QueryClient {
@@ -123,11 +121,11 @@ public class QueryClient {
 
             // Print STAR score header, sort and fill csv with first round results
             printer.printRecord(SCORE_HEADER);
-            results.getFirstRound().entrySet().stream().sorted(Result.sortIntegerMap).forEach(r -> fillCSVInteger.accept(r, printer));
+            results.getFirstStage().entrySet().stream().sorted(Result.sortIntegerMap).forEach(r -> fillCSVInteger.accept(r, printer));
 
             // Print STAR percentage header, sort and fill csv with second round results
             printer.printRecord(PERCENTAGE_HEADER);
-            results.getSecondRound().entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, printer, true));
+            results.getSecondStage().entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, printer, true));
 
             // Print winner
             printer.printRecord("Winner");

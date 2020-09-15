@@ -12,16 +12,16 @@ public class SPAV extends Result {
 
     /**
      * Constructor sets defaults.
-     * Fills the rounds.
+     * @param votes Votes to fill the rounds.
      */
-    public SPAV(List<Vote> voteList) {
+    public SPAV(List<Vote> votes) {
         partial = false;
         type = Type.SPAV;
-        rounds = new ArrayList<>();
         winners = new String[maxRounds];
+        rounds = new ArrayList<>();
 
         IntStream.range(0, maxRounds).forEach(n -> {
-            rounds.add(n, fillRound(voteList));
+            rounds.add(n, fillRound(votes));
             winners[n] = calculateWinner(rounds.get(n));
         });
     }
@@ -51,13 +51,13 @@ public class SPAV extends Result {
 
     /**
      * Returns the map of a round given the time its executed
-     * @param voteList The complete vote list.
+     * @param votes The complete vote list.
      * @return
      */
-    private Map<String, Double> fillRound(List<Vote> voteList) {
+    private Map<String, Double> fillRound(List<Vote> votes) {
         Map<String, Double> roundMap = new HashMap<>();
-        voteList.forEach(vote -> processVote(vote.getScoreMap().keySet())
-                        .forEach((key, val) -> roundMap.merge(key, val, Double::sum))); // This is for each key-value pair returned
+        votes.forEach(vote -> processVote(vote.getScoreMap().keySet())
+                        .forEach((key, val) -> roundMap.merge(key, val, Double::sum))); // This is for each key-value pair returned from processing
         return roundMap;
     }
 

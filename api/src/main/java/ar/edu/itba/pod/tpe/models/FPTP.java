@@ -16,11 +16,11 @@ public class FPTP extends Result {
      * Constructor sets defaults.
      */
     public FPTP() {
-        map = new HashMap<>();
         partial = true;
         type = Type.FPTP;
-        total = 0;
         winners = new String[1];
+        map = new HashMap<>();
+        total = 0;
     }
 
     /**

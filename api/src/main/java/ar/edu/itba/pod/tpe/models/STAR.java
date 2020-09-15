@@ -5,83 +5,110 @@ import java.util.*;
 public class STAR extends Result {
     private static final long serialVersionUID = 6273175734504242179L;
 
-    private Map<String, Integer> firstRound;
-    private Map<String, Double> secondRound;
+    private Map<String, Integer> firstStage;
+    private Map<String, Double> secondStage;
 
 
-    public STAR(List<Vote> voteList) {
-        this.firstRound = firstSTAR(voteList);
-        this.secondRound = secondSTAR(voteList);
-        this.winners[0] = Collections.max(secondRound.entrySet(), sortDoubleMap).getKey();
-        this.partial= false;
-        this.type = Type.STAR;
+    /**
+     * Constructor sets defaults.
+     * @param votes
+     */
+    public STAR(List<Vote> votes) {
+        partial= false;
+        type = Type.STAR;
         winners = new String[1];
+
+        firstStage = fillFirstStage(votes);
+        secondStage = fillSecondStage(votes);
+
+        winners[0] = Collections.max(secondStage.entrySet(), sortDoubleMap).getKey();
     }
 
+    /**
+     * Gets the STAR final winner.
+     * @return String for the STAR final winner.
+     */
     public String getWinner(){
         return winners[0];
     }
 
-     public boolean getPartial() {
-        return partial;
-     }
-
-    public Map<String, Integer> getFirstRound() {
-        return firstRound;
+    /**
+     * Standard getter for the first stage.
+     * @return Map with the party and the added score.
+     */
+    public Map<String, Integer> getFirstStage() {
+        return firstStage;
     }
 
-    public Map<String, Double> getSecondRound() {
-        return secondRound;
+    /**
+     * Standard getter for the first stage.
+     * @return Map with the party and percentage of votes.
+     */
+    public Map<String, Double> getSecondStage() {
+        return secondStage;
     }
 
 
-    private Map<String, Integer> firstSTAR(List<Vote> voteList) {
+    /**
+     * Auxiliary functions.
+     */
+
+    /**
+     * Fills the first stage by adding all the scores for each vote.
+     * @param votes The list of all the votes.
+     * @return A map with the party and the added score.
+     */
+    private Map<String, Integer> fillFirstStage(List<Vote> votes) {
         Map<String, Integer> firstStar = new HashMap<>();
-        for(Vote vote : voteList){
-            for(String party : vote.getScoreMap().keySet()){
-                firstStar.put(party, firstStar.getOrDefault(party, 0) + vote.getScoreMap().get(party));
-            }
-        }
+        votes.forEach(vote -> vote.getScoreMap()
+                .forEach((key, val) -> firstStar.merge(key, val, Integer::sum))); // This is for each key-value pair from score map
         return firstStar;
     }
 
-    private Map<String, Double> secondSTAR(List<Vote> voteList) {
-        Map<String, Double> secondStar = new HashMap<>();
-        Map<String, Integer> points = new HashMap<>();
-
-        final String[] winners = firstRound.entrySet().stream()
+    /**
+     * Fills the second stage by counting only for the previous 2 winners.
+     * @param votes The list of all the votes
+     * @return A map with the party and percentage of votes.
+     */
+    private Map<String, Double> fillSecondStage(List<Vote> votes) {
+        final String[] winners = firstStage.entrySet().stream()
                 .sorted(sortIntegerMap)
                 .limit(2)
                 .map(Map.Entry::getKey)
                 .toArray(String[]::new);
 
-        if (winners.length < 2) {
-            for (String winner : winners) {
-                secondStar.put(winner, 100.0);
-            }
-            return secondStar;
-        }
+        // Only one or no winner cases
+        if (winners.length == 1) return Collections.singletonMap(winners[0], 100.0);
+        if (winners.length == 0) return Collections.emptyMap();
 
+        Map<String, Integer> points = new HashMap<>();
         String winnerAlpha = winners[0].compareTo(winners[1]) < 0 ? winners[0]:winners[1];
-        for(Vote vote : voteList) {
-            int firstVotes = vote.getScoreMap().getOrDefault(winners[0], 0),
-                    secondVotes = vote.getScoreMap().getOrDefault(winners[1], 0);
 
-            // Si ambos sumaron 0, se descarta la boleta
+        // TODO: I do not like this
+        for(Vote vote : votes) {
+            int firstVotes = vote.getScoreMap().getOrDefault(winners[0], 0);
+            int secondVotes = vote.getScoreMap().getOrDefault(winners[1], 0);
+
+            // Discard if both did not have votes
             if (firstVotes != 0 || secondVotes != 0) {
-                if (firstVotes > secondVotes) { // Voto w1 > voto w2
+                if (firstVotes > secondVotes) {
                     points.put(winners[0], points.getOrDefault(winners[0], 0) + 1);
-                } else if (firstVotes < secondVotes) { // Voto w1 < voto w2
+                } else if (firstVotes < secondVotes) {
                     points.put(winners[1], points.getOrDefault(winners[1], 0) + 1);
-                } else { // Son iguales, sumo al menor alfabeticamente
+                } else {
                     points.put(winnerAlpha, points.getOrDefault(winnerAlpha, 0) + 1);
                 }
             }
         }
-        int total = points.get(winners[0]) + points.get(winners[1]);
-        secondStar.put(winners[0], points.get(winners[0]).doubleValue() / total * 100);
-        secondStar.put(winners[1], 100 - secondStar.get(winners[0]));
 
-        return secondStar;
+        // Calculate total of votes
+        int total = points.get(winners[0]) + points.get(winners[1]);
+
+        // Return created map with percentages of the winners
+        Map<String, Double> secondStageResults = new HashMap<>();
+        secondStageResults.put(winners[0], points.get(winners[0]).doubleValue() / total * 100);
+        secondStageResults.put(winners[1], 100 - secondStageResults.get(winners[0]));
+        return secondStageResults;
     }
+
 }
