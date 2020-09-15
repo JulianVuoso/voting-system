@@ -1,6 +1,6 @@
 package ar.edu.itba.pod.tpe.exceptions;
 
-// FIXME: Juntar con otras excepciones de estados ilegales?
+// TODO: should merge with another "illegal state" exception
 public class IllegalElectionStateException extends Exception {
     private static final long serialVersionUID = 2459136901084292400L;
 
