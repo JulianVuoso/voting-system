@@ -24,6 +24,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class QueryClient {
@@ -183,15 +184,13 @@ public class QueryClient {
         for (int i = 0; i < SPAV.maxRounds; i++) {
 
             // Print SPAV approval header
-            printer.printRecord("Round " + i + 1);
+            printer.printRecord("Round " + (i + 1));
             printer.printRecord(APPROVAL_HEADER);
             results.getRound(i).entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSV.accept(r, printer, "##.00", ""));
 
-            // Print winners TODO: check if can be done with Collectors.joining
+            // Print winners
             printer.printRecord("Winners");
-            StringBuilder stringBuilder = new StringBuilder(results.getWinner()[0]);
-            IntStream.range(1, i).forEach(n -> stringBuilder.append(", ").append(results.getWinner()[n]));
-            printer.printRecord(stringBuilder);
+            printer.printRecord(Arrays.stream(results.getWinner()).limit(i + 1).collect(Collectors.joining(", ")));
         }
     };
 

@@ -56,7 +56,7 @@ public class SPAV extends Result {
 
         IntStream.range(0, maxRounds).forEach(n -> {
             rounds.add(n, fillRound(votes));
-            winners[n] = Collections.max(rounds.get(n).entrySet(), sortDoubleMap).getKey();
+            winners[n] = Collections.min(rounds.get(n).entrySet(), sortDoubleMap).getKey();
         });
     }
 

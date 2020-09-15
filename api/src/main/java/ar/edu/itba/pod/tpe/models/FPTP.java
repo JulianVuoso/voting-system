@@ -53,7 +53,7 @@ public class FPTP extends Result {
         partial = false;
 
         map = votes.stream().collect(Collectors.groupingBy(Vote::getWinner, Collectors.reducing(0, e -> 1, Integer::sum)));
-        winners[0] = Collections.max(map.entrySet(), sortIntegerMap).getKey();
+        winners[0] = Collections.min(map.entrySet(), sortIntegerMap).getKey();
     }
 
     /**
