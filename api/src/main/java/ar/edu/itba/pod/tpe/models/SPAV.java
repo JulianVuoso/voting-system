@@ -1,75 +1,117 @@
 package ar.edu.itba.pod.tpe.models;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class SPAV extends Result {
     private static final long serialVersionUID = 2779903270007229997L;
 
-    private Map<String, Double> round1;
-    private Map<String, Double> round2;
-    private Map<String, Double> round3;
+    private List<Map<String, Double>> rounds;
+    public static final Integer maxRounds = 3;
 
-    public SPAV(Map<String, Double> round1, Map<String, Double> round2, Map<String, Double> round3, String[] winners) {
-        this.round1 = round1;
-        this.round2 = round2;
-        this.round3 = round3;
-        this.winner = winners;
-        this.partial = false;
-        this.type = Type.SPAV;
+    private FPTP partialResult;
+
+    /**
+     * Constructor sets values to default.
+     */
+    public SPAV() {
+        type = Type.SPAV;
+        winners = new String[maxRounds];
+        partialResult = new FPTP();
+        rounds = new ArrayList<>();
     }
 
-    public SPAV(List<Vote> voteList) {
-        this.round1 = spavIterator(voteList, this.winner);
-        this.winner[0] = getWinner(this.round1);
-
-        this.round2 = spavIterator(voteList, this.winner);
-        this.winner[1] = getWinner(this.round2);
-
-        this.round3 = spavIterator(voteList, this.winner);
-        this.winner[2] = getWinner(this.round3);
-
-        this.partial = false;
-        this.type = Type.SPAV;
+    /**
+     * Adds a vote given the party winner.
+     * @param vote The vote to process.
+     */
+    public void addPartialVote(Vote vote) {
+        partialResult.addPartialVote(vote);
     }
 
-    public boolean getPartial(){
-        return partial;
+    /**
+     * Checks if the partial result is empty.
+     * @return True if its empty, false otherwise.
+     */
+    public boolean isPartialEmpty() {
+        return partialResult.isEmpty();
     }
 
-    public Map<String, Double> getRound1() {
-        return round1;
+    /**
+     * Gets the partial result.
+     * @return Partial result in form of a FPTP.
+     */
+    public FPTP getPartialResult() {
+        return partialResult;
     }
 
-    public Map<String, Double> getRound2() {
-        return round2;
+    /**
+     * Sets the winners and stages given the list of votes.
+     * @param votes The final list of votes.
+     */
+    public void setFinal(List<Vote> votes) {
+        if (!partial) return;
+        partial = false;
+
+        IntStream.range(0, maxRounds).forEach(n -> {
+            rounds.add(n, fillRound(votes));
+            winners[n] = Collections.min(rounds.get(n).entrySet(), sortDoubleMap).getKey();
+        });
     }
 
-    public Map<String, Double> getRound3() {
-        return round3;
+    /**
+     * Gets the corresponding round.
+     * @param number The round number to
+     * @return
+     */
+    public Map<String, Double> getRound(int number) {
+        return rounds.get(number);
     }
 
+    /**
+     * Gets the SPAV final winners.
+     * @return Strings for the SPAV final winners.
+     */
     public String[] getWinner(){
-        return winner;
+        return winners;
     }
 
-    private Map<String, Double> spavIterator(List<Vote> voteList, String[] winners){
-        Map<String, Double> spavRound = new HashMap<>();
-        for(Vote vote : voteList){                                // por cada voto
-            Map<String, Double> mapVote = vote.getSPAV(winners);    // obtengo su party -> puntaje
-            for(String party : mapVote.keySet()){
-                spavRound.put(party, spavRound.getOrDefault(party, 0.0) + mapVote.get(party));
-            }
+
+    /**
+     * Auxiliary methods
+     */
+
+
+    /**
+     * Returns the map of a round given the time its executed
+     * @param votes The complete vote list.
+     * @return
+     */
+    private Map<String, Double> fillRound(List<Vote> votes) {
+        Map<String, Double> roundMap = new HashMap<>();
+        votes.forEach(vote -> processVote(vote.getScoreMap().keySet())
+                        .forEach((key, val) -> roundMap.merge(key, val, Double::sum))); // This is for each key-value pair returned from processing
+        return roundMap;
+    }
+
+    /**
+     * Process the vote according to the previous winners.
+     * @param votedParties The parties that obtained at least a 1.
+     * @return
+     */
+    private Map<String, Double> processVote(Set<String> votedParties) {
+        // When there is no previous winners, all votes are taken into account
+        if (winners.length == 0) {
+            return votedParties.stream().collect(Collectors.toMap(party -> party, party -> 1d));
         }
-        return spavRound;
+
+        // There were already winners on previous rounds. Remove those from parties.
+        Set<String> parties = new HashSet<>(votedParties);
+        parties.removeAll(new HashSet<>(Arrays.asList(winners)));
+
+        // Add parties and respective points without counting the previous winners
+        return parties.stream().collect(Collectors.toMap(party -> party, party -> 1.0 / (votedParties.size() - parties.size() + 1)));
     }
 
-    private String getWinner(Map<String, Double> round) {
-        return Collections.max(round.entrySet(),
-                (o1, o2) -> o1.getValue() > o2.getValue()?
-                        1:(o1.getValue().equals(o2.getValue())?
-                        (o2.getKey().compareTo(o1.getKey())):-1)).getKey();
-    }
 }

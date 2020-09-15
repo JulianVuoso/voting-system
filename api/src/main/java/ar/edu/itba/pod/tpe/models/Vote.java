@@ -10,65 +10,54 @@ public class Vote implements Serializable {
 
     private Integer table;
     private String state;
-    private Map<String,Integer> star;
-    private String voteFPTP;
+    private Map<String,Integer> scoreMap;
+    private String winner;
+
 
     /**
-     * table => número de mesa
-     * state => provincia
-     * star => Mapa con Key: nombre de partido, value: valor del voto
-     *          si agarro el keyset me sirve para SPAV, y key-value me sirve para STAR
-     * voteFPTP => String con nombre del partido ganador
+     * Constructor
+     * @param table Table number
+     * @param state State name
+     * @param star Map with party name as key, and vote value as value
+     * @param winner Name of the winning party
      */
-
-    public Vote(Integer table, String state, Map<String, Integer> star, String voteFPTP) {
+    public Vote(Integer table, String state, Map<String, Integer> star, String winner) {
         this.table = table;
         this.state = state;
-        this.star = star;
-        this.voteFPTP = voteFPTP;
+        this.scoreMap = star;
+        this.winner = winner;
     }
 
+    /**
+     * Gets the table where the vote was made.
+     * @return Table number.
+     */
     public Integer getTable() {
         return table;
     }
 
+    /**
+     * Gets the state where the vote was made.
+     * @return The state name.
+     */
     public String getState() {
         return state;
     }
 
-    public Map<String, Integer> getSTAR() {
-        return star;
+    /**
+     * Gets the winner of the vote.
+     * @return The name of the winner party.
+     */
+    public String getWinner() {
+        return winner;
     }
 
-    public String getVoteFPTP() {
-        return voteFPTP;
+    /**
+     * Gets the vote score map.
+     * @return A map with the party as key and the score as value.
+     */
+    public Map<String, Integer> getScoreMap() {
+        return scoreMap;
     }
 
-    public Map<String, Double> getSPAV(String[] winners){
-        Map<String, Double> results = new HashMap<>();
-        if(winners == null || winners.length == 0){
-            //si no hay ganadores anteriores => en el mapa van todos los de la boleta con valor 1
-            for(String party : star.keySet() ){
-                results.put(party, 1d);
-            }
-        }
-        else{
-            Set<String> parties = new HashSet<>(star.keySet());
-            // ya hubo ganadores en las rondas anteriores
-            int winnersMatching = 1;
-            for(String w : winners){
-                //me fijo cuantos de los ganadores hay en la boleta y los sumo en winnersMatching
-                if(star.containsKey(w)){
-                    winnersMatching++;
-                    parties.remove(w);
-                }
-            }
-            // Agrego los partidos y respectivos puntajes al nuevo mapa
-            // sin tener en cuenta el/los ganador/es anterior/es
-            for( String party : parties){
-                results.put(party, 1.0 / winnersMatching);
-            }
-        }
-        return results;
-    }
 }

@@ -265,9 +265,8 @@ public class InspectionTest {
         assertTrue(electionFinished);
     }
 
-    // TODO: UNCOMMENT WHEN SYNC FINISHED
     // The following test is not 100% fail proof, but should fail sometimes if no synchronization is implemented
-    /*@Test
+    @Test
     public final void testInspectSync() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
         final Map<String, Integer> starMap = new HashMap<>();
         starMap.put(OTHER_PARTY, 2);
@@ -292,5 +291,5 @@ public class InspectionTest {
 
         assertEquals(VOTE_COUNT * THREAD_COUNT, registerCounter.get());
         assertTrue(electionFinished);
-    }*/
+    }
 }
