@@ -2,7 +2,6 @@ package ar.edu.itba.pod.tpe.client;
 
 
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
-import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.VotingService;
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
@@ -93,7 +92,7 @@ public class VotingClient {
             service.vote(new Vote(Integer.valueOf(parse[0]), parse[1], votes, parse[3]));
         }
 
-        System.out.println("\n" + file.size() + " votes registered");;
+        System.out.println("\n" + file.size() + " votes registered");
     }
 
 

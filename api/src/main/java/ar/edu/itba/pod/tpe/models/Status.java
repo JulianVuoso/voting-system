@@ -7,6 +7,6 @@ public enum Status implements Serializable {
     STARTED,
     OPEN,
     ENDED,
-    CLOSE;
+    CLOSE
 
 }

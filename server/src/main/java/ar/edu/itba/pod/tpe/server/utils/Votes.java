@@ -3,7 +3,6 @@ package ar.edu.itba.pod.tpe.server.utils;
 import ar.edu.itba.pod.tpe.models.Vote;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Votes {
 
@@ -61,7 +60,7 @@ public class Votes {
      * @param table The table to get the list of votes.
      * @return The list of votes.
      */
-    public List<Vote> getTableVoteList(Integer table) {
+    public List<Vote> getTableVoteList(int table) {
         Optional<Map<Integer, List<Vote>>> optionalMap =votes.values()
                 .stream()
                 .filter(map -> map.containsKey(table))
@@ -93,7 +92,7 @@ public class Votes {
      * @param table The table number to check.
      * @return True if there is no table with votes, false otherwise.
      */
-    public boolean isTableEmpty(Integer table) {
+    public boolean isTableEmpty(int table) {
         return votes.values().stream().noneMatch(maps -> maps.containsKey(table));
     }
 

@@ -1,14 +1,13 @@
 package ar.edu.itba.pod.tpe.models;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class Vote implements Serializable {
 
-    private Integer table;
+    private static final long serialVersionUID = 2520379198459818215L;
+
+    private int table;
     private String state;
     private Map<String,Integer> scoreMap;
     private String winner;

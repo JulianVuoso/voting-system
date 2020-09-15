@@ -1,7 +1,6 @@
 package ar.edu.itba.pod.tpe;
 
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
-import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.exceptions.NoVotesException;
 
 import ar.edu.itba.pod.tpe.models.*;
@@ -145,7 +144,7 @@ public class QueryTest {
     }
 
     @Test
-    public final void testAskStateClosed() throws IllegalElectionStateException, RemoteException, ManagementException, NoVotesException {
+    public final void testAskStateClosed() throws IllegalElectionStateException, RemoteException, NoVotesException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1, 4);
         testMap.put(PARTY_2, 2);
@@ -176,7 +175,7 @@ public class QueryTest {
     }
 
     @Test
-    public final void testAskTable() throws IllegalElectionStateException, RemoteException, ManagementException, NoVotesException {
+    public final void testAskTable() throws IllegalElectionStateException, RemoteException, NoVotesException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 

@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.Map;
 
 public abstract class Result implements Serializable {
+    private static final long serialVersionUID = 9013545037337543650L;
+
     String[] winners;
     Type type;
     boolean partial = true;
