@@ -1,7 +1,6 @@
 package ar.edu.itba.pod.tpe;
 
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
-import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.server.ElectionServiceImpl;
 import org.junit.Before;
 import org.junit.Test;

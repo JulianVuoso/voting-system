@@ -1,7 +1,6 @@
 package ar.edu.itba.pod.tpe;
 
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
-import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.interfaces.VoteAvailableCallbackHandler;
 import ar.edu.itba.pod.tpe.models.Vote;
 import ar.edu.itba.pod.tpe.server.ElectionServiceImpl;
@@ -59,7 +58,7 @@ public class VotingTest {
     }
 
     @Test(expected = IllegalElectionStateException.class)
-    public final void testVoteWhenElectionFinish() throws IllegalElectionStateException, RemoteException, ManagementException{
+    public final void testVoteWhenElectionFinish() throws IllegalElectionStateException, RemoteException{
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY,4);
 
@@ -69,7 +68,7 @@ public class VotingTest {
     }
 
     @Test
-    public final void testVote() throws IllegalElectionStateException, RemoteException, ManagementException, InterruptedException {
+    public final void testVote() throws IllegalElectionStateException, RemoteException, InterruptedException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY,4);
 
@@ -85,7 +84,7 @@ public class VotingTest {
     }
 
     @Test
-    public final void testMultipleVotes() throws IllegalElectionStateException, RemoteException, ManagementException, InterruptedException {
+    public final void testMultipleVotes() throws IllegalElectionStateException, RemoteException, InterruptedException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY,4);
 

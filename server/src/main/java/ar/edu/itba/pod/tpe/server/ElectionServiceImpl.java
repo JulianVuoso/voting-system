@@ -176,7 +176,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     }
 
     @Override
-    public Result askTable(Integer table) throws RemoteException, NoVotesException, IllegalElectionStateException {
+    public Result askTable(int table) throws RemoteException, NoVotesException, IllegalElectionStateException {
         if(status == Status.REGISTRATION)
             throw new IllegalElectionStateException("Polls not open");
 

@@ -20,7 +20,7 @@ public interface QueryService extends Remote {
      */
     Result askNational() throws RemoteException, NoVotesException, IllegalElectionStateException;
     Result askState(String state) throws RemoteException, NoVotesException, IllegalElectionStateException;
-    Result askTable(Integer table) throws RemoteException, NoVotesException, IllegalElectionStateException;
+    Result askTable(int table) throws RemoteException, NoVotesException, IllegalElectionStateException;
 }
 
 /*

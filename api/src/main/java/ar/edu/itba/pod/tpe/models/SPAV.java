@@ -8,7 +8,7 @@ public class SPAV extends Result {
     private static final long serialVersionUID = 2779903270007229997L;
 
     private List<Map<String, Double>> rounds;
-    public static final Integer maxRounds = 3;
+    public static final int maxRounds = 3;
 
     private FPTP partialResult;
 
