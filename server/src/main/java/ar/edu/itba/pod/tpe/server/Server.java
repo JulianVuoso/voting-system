@@ -22,8 +22,6 @@ public class Server {
         final Remote remote = UnicastRemoteObject.exportObject(new ElectionServiceImpl(), 0);
 
         final Registry registry = LocateRegistry.getRegistry();
-        // TODO: RENAME IN CLIENT AND REMOVE service FROM HERE
-        registry.rebind("service", remote);
         registry.rebind(InspectionService.class.getName(), remote);
         registry.rebind(ManagementService.class.getName(), remote);
         registry.rebind(VotingService.class.getName(), remote);
