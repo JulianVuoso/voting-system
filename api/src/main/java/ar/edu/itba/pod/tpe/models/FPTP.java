@@ -48,7 +48,7 @@ public class FPTP extends Result {
      */
     public void setFinal() {
         partial = false;
-        winners[0] = calculateWinner();
+        winners[0] = Collections.max(map.entrySet(), sortIntegerMap).getKey();
     }
 
     /**
@@ -57,20 +57,6 @@ public class FPTP extends Result {
      */
     public String getWinner() {
         return winners[0];
-    }
-
-
-    /**
-     * Auxiliary functions.
-     */
-
-
-    /**
-     * Calculates the winner given the collection.
-     * @return The winner.
-     */
-    private String calculateWinner() {
-        return Collections.max(map.entrySet(), sortIntegerMap).getKey();
     }
 
 }

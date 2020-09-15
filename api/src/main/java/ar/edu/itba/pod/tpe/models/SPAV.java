@@ -22,7 +22,7 @@ public class SPAV extends Result {
 
         IntStream.range(0, maxRounds).forEach(n -> {
             rounds.add(n, fillRound(votes));
-            winners[n] = calculateWinner(rounds.get(n));
+            winners[n] = Collections.max(rounds.get(n).entrySet(), sortDoubleMap).getKey();
         });
     }
 
@@ -78,15 +78,6 @@ public class SPAV extends Result {
 
         // Add parties and respective points without counting the previous winners
         return parties.stream().collect(Collectors.toMap(party -> party, party -> 1.0 / (votedParties.size() - parties.size() + 1)));
-    }
-
-    /**
-     * Calculates the winner for the given round.
-     * @param round The round to calculate the winner.
-     * @return The winner.
-     */
-    private String calculateWinner(Map<String, Double> round) {
-        return Collections.max(round.entrySet(), sortDoubleMap).getKey();
     }
 
 }

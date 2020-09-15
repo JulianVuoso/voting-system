@@ -77,7 +77,7 @@ public class VotingClient {
      * @throws
      **/
     private static void parseFile(List<String> file, VotingService service) throws RemoteException, IllegalElectionStateException {
-        for(String line : file ){
+        for(String line : file ) {
             String[] parse = line.split(";");
             Map<String, Integer> votes = parseVotes(parse[2]);
             service.vote(new Vote(Integer.valueOf(parse[0]), parse[1], votes, parse[3]));

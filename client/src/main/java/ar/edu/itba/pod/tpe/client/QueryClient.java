@@ -2,8 +2,10 @@ package ar.edu.itba.pod.tpe.client;
 
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
+import ar.edu.itba.pod.tpe.client.utils.QuadConsumer;
 import ar.edu.itba.pod.tpe.client.utils.ThrowableBiConsumer;
 import ar.edu.itba.pod.tpe.client.utils.TriConsumer;
+import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
 import ar.edu.itba.pod.tpe.models.*;
 import org.apache.commons.csv.CSVFormat;
@@ -52,7 +54,7 @@ public class QueryClient {
     private static final String SCORE_HEADER = "Score;Party";
 
 
-    public static void main(String[] args) throws RemoteException, NotBoundException, ArgumentException {
+    public static void main(String[] args) throws RemoteException, NotBoundException {
         logger.info("tpe1-g6 Query Client Starting ...");
 
         try {
@@ -65,15 +67,34 @@ public class QueryClient {
 
         logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + path);
 
+        try {
+            final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
+            final QueryService service = (QueryService) registry.lookup(QueryService.class.getName());
 
-        final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
-        final QueryService service = (QueryService) registry.lookup(QueryService.class.getName());
+            if (state.isPresent())
+                genericFunction(path, service.askState(state.get()), printSPAV);
+            else if (table.isPresent())
+                genericFunction(path, service.askTable(table.get()), printFPTP);
+            else genericFunction(path, service.askNational(), printSTAR);
 
+        } catch (RemoteException e) {
+            System.err.println("Remote communication failed.");
+            System.exit(ERROR_STATUS);
+        } catch (NotBoundException e) {
+            System.err.println("Server " + QueryClient.class.getName() + " has no associated binding.");
+            System.exit(ERROR_STATUS);
+        }
 
     }
 
 
-    private static TriConsumer<String, Result, ThrowableBiConsumer<Result, CSVPrinter, IOException>> func = (file, result, biConsumer) -> {
+    /**
+     * Opens the csv printer, executes the printing function, and closes the printer.
+     * @param file File path for the csv printer.
+     * @param result Result from the service response.
+     * @param printFunction Print function to be applied.
+     */
+    private static void genericFunction(String file, Result result, ThrowableBiConsumer<Result, CSVPrinter, IOException> printFunction) {
         try {
             // Opens csv printer
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
@@ -81,83 +102,97 @@ public class QueryClient {
                     .withRecordSeparator('\n'));
 
             // Applies function to result and writes on the csv
-            biConsumer.accept(result, csvPrinter);
+            if (result.isPartial())
+               printFPTP.accept(result, csvPrinter);
+            else printFunction.accept(result, csvPrinter);
 
             // Closes the csv printer
             csvPrinter.flush();
         } catch (IOException e){
             System.err.println("Error while printing CSV file");
         }
+    }
+
+
+    /**
+     * Consumer prints with the csv printer the formatted output.
+     */
+    private static final QuadConsumer<Map.Entry<String, ? extends Number>, CSVPrinter, String, String> fillCSV = (results, printer, decFormat, symbol) -> {
+        String party = results.getKey();
+        DecimalFormat format = new DecimalFormat(decFormat);
+        String value = format.format(results.getValue()) + symbol;
+        try {
+            printer.printRecord(value, party);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     };
 
 
+    /**
+     * Throwable consumer, prints the result as a FPTP
+     */
+    private static final ThrowableBiConsumer<Result, CSVPrinter, IOException> printFPTP = (res, printer) -> {
+        FPTP results = (FPTP) res;
 
+        // Print FPTP header, sort and fill csv with results
+        printer.printRecord(PERCENTAGE_HEADER);
+        results.getPercentagesMap()
+                .entrySet()
+                .stream()
+                .sorted(Result.sortDoubleMap)
+                .forEach(r -> fillCSV.accept(r, printer, "##.00", "%"));
 
-    private static void printFPTP(String file, Result result) {
-        final ThrowableBiConsumer<Result, CSVPrinter, IOException> print = (res, printer) -> {
-            FPTP results = (FPTP) res;
-
-            // Print FPTP header, sort and fill csv with results
-            printer.printRecord(PERCENTAGE_HEADER);
-            results.getPercentagesMap()
-                    .entrySet()
-                    .stream()
-                    .sorted(Result.sortDoubleMap)
-                    .forEach(r -> fillCSVDouble.accept(r, printer, true));
-
-            // Print winner if final result
-            if(!results.isPartial()) {
-                printer.printRecord("Winner");
-                printer.printRecord(results.getWinner());
-            }
-        };
-
-       func.accept(file, result, print);
-    }
-
-    private static void printSTAR(String file, Result result) {
-        final ThrowableBiConsumer<Result, CSVPrinter, IOException> print = (res, printer) -> {
-            STAR results = (STAR) res;
-
-            // Print STAR score header, sort and fill csv with first round results
-            printer.printRecord(SCORE_HEADER);
-            results.getFirstStage().entrySet().stream().sorted(Result.sortIntegerMap).forEach(r -> fillCSVInteger.accept(r, printer));
-
-            // Print STAR percentage header, sort and fill csv with second round results
-            printer.printRecord(PERCENTAGE_HEADER);
-            results.getSecondStage().entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, printer, true));
-
-            // Print winner
+        // Print winner if final result
+        if(!results.isPartial()) {
             printer.printRecord("Winner");
             printer.printRecord(results.getWinner());
+        }
+    };
 
-        };
 
-        func.accept(file, result, print);
-    }
+    /**
+     * Throwable consumer, prints the result as a STAR
+     */
+    private static final ThrowableBiConsumer<Result, CSVPrinter, IOException> printSTAR = (res, printer) -> {
+        STAR results = (STAR) res;
 
-    private static void printSPAV(String file, Result result) {
-        final ThrowableBiConsumer<Result, CSVPrinter, IOException> print = (res, printer) -> {
-            SPAV results = (SPAV) res;
+        // Print STAR score header, sort and fill csv with first round results
+        printer.printRecord(SCORE_HEADER);
+        results.getFirstStage().entrySet().stream().sorted(Result.sortIntegerMap).forEach(r -> fillCSV.accept(r, printer, "##", ""));
 
-            // For each round do
-            for (int i = 0; i < SPAV.maxRounds; i++) {
+        // Print STAR percentage header, sort and fill csv with second round results
+        printer.printRecord(PERCENTAGE_HEADER);
+        results.getSecondStage().entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSV.accept(r, printer, "##.00", "%"));
 
-                // Print SPAV approval header
-                printer.printRecord("Round " + i);
-                printer.printRecord(APPROVAL_HEADER);
-                results.getRound(i).entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, printer, false));
+        // Print winner
+        printer.printRecord("Winner");
+        printer.printRecord(results.getWinner());
 
-                // Print winners
-                printer.printRecord("Winners");
-                StringBuilder stringBuilder = new StringBuilder(results.getWinner()[0]);
-                IntStream.range(1, i).forEach(n -> stringBuilder.append(", ").append(results.getWinner()[n]));
-                printer.printRecord(stringBuilder);
-            }
-        };
+    };
 
-        func.accept(file, result, print);
-    }
+
+    /**
+     * Throwable consumer, prints the result as a SPAV
+     */
+    private static final ThrowableBiConsumer<Result, CSVPrinter, IOException> printSPAV = (res, printer) -> {
+        SPAV results = (SPAV) res;
+
+        // For each round do
+        for (int i = 0; i < SPAV.maxRounds; i++) {
+
+            // Print SPAV approval header
+            printer.printRecord("Round " + i);
+            printer.printRecord(APPROVAL_HEADER);
+            results.getRound(i).entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSV.accept(r, printer, "##.00", ""));
+
+            // Print winners TODO: check if can be done with Collectors.joining
+            printer.printRecord("Winners");
+            StringBuilder stringBuilder = new StringBuilder(results.getWinner()[0]);
+            IntStream.range(1, i).forEach(n -> stringBuilder.append(", ").append(results.getWinner()[n]));
+            printer.printRecord(stringBuilder);
+        }
+    };
 
 
     /**
@@ -195,36 +230,5 @@ public class QueryClient {
             throw new ArgumentException("Specify only a state through -Dstate or a table number through -Did. Do not specify both");
         }
     }
-
-
-
-
-
-
-
-
-    private static final TriConsumer<Map.Entry<String, Double>, CSVPrinter, Boolean> fillCSVDouble = (results, printer, b) -> {
-        String party = results.getKey();
-        DecimalFormat format = new DecimalFormat("##.00");
-        String percent = format.format(results.getValue()) + ((b)? "%" : "");
-        try {
-            printer.printRecord(percent, party);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    };
-
-
-    private static final BiConsumer<Map.Entry<String, Integer>, CSVPrinter> fillCSVInteger = (results, printer) -> {
-        String party = results.getKey();
-        DecimalFormat format = new DecimalFormat("##");
-        String percent = format.format(results.getValue());
-        try {
-            printer.printRecord(percent, party);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    };
-
 
 }
