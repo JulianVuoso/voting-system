@@ -15,7 +15,7 @@ public class Votes {
         votes = new HashMap<>();
     }
 
-    public synchronized void addVote(Vote vote) {
+    public void addVote(Vote vote) {
         String state = vote.getState();
         Integer table = vote.getTable();
 

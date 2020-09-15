@@ -132,10 +132,8 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
             // Check if there are inspectors registered to that table and FPTP candidate
             final Pair<String, Integer> inspectLocation = new Pair<>(vote.getWinner(), vote.getTable());
-            synchronized (inspectorsLock) {
-                Optional.ofNullable(inspectorHandlers.get(inspectLocation))
-                        .ifPresent(handlerList -> handlerList.forEach(h -> sendNotificationToInspector(h, inspectLocation)));
-            }
+            Optional.ofNullable(inspectorHandlers.get(inspectLocation))
+                    .ifPresent(handlerList -> handlerList.forEach(h -> sendNotificationToInspector(h, inspectLocation)));
         }
 
         synchronized (absentLock) {
