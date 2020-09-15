@@ -104,7 +104,7 @@ public class QueryClient {
             results.getPercentagesMap()
                     .entrySet()
                     .stream()
-                    .sorted(sortDoubleMap)
+                    .sorted(Result.sortDoubleMap)
                     .forEach(r -> fillCSVDouble.accept(r, printer, true));
 
             // Print winner if final result
@@ -123,11 +123,11 @@ public class QueryClient {
 
             // Print STAR score header, sort and fill csv with first round results
             printer.printRecord(SCORE_HEADER);
-            results.getFirstRound().entrySet().stream().sorted(sortIntegerMap).forEach(r -> fillCSVInteger.accept(r, printer));
+            results.getFirstRound().entrySet().stream().sorted(Result.sortIntegerMap).forEach(r -> fillCSVInteger.accept(r, printer));
 
             // Print STAR percentage header, sort and fill csv with second round results
             printer.printRecord(PERCENTAGE_HEADER);
-            results.getSecondRound().entrySet().stream().sorted(sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, printer, true));
+            results.getSecondRound().entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, printer, true));
 
             // Print winner
             printer.printRecord("Winner");
@@ -142,25 +142,23 @@ public class QueryClient {
         final ThrowableBiConsumer<Result, CSVPrinter, IOException> print = (res, printer) -> {
             SPAV results = (SPAV) res;
 
-            printSPAVRound(printer, results.getRound1(),1, results.getWinner());
-            printSPAVRound(printer, results.getRound2(),2, results.getWinner());
-            printSPAVRound(printer, results.getRound3(),3, results.getWinner());
+            // For each round do
+            for (int i = 0; i < SPAV.maxRounds; i++) {
+
+                // Print SPAV approval header
+                printer.printRecord("Round " + i);
+                printer.printRecord(APPROVAL_HEADER);
+                results.getRound(i).entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, printer, false));
+
+                // Print winners
+                printer.printRecord("Winners");
+                StringBuilder stringBuilder = new StringBuilder(results.getWinner()[0]);
+                IntStream.range(1, i).forEach(n -> stringBuilder.append(", ").append(results.getWinner()[n]));
+                printer.printRecord(stringBuilder);
+            }
         };
 
         func.accept(file, result, print);
-    }
-
-    private static void printSPAVRound(CSVPrinter csvPrinter, Map<String,Double> results, int round, String[] winners) throws IOException {
-        // Print SPAV approval header
-        csvPrinter.printRecord("Round " + round);
-        csvPrinter.printRecord(APPROVAL_HEADER);
-        results.entrySet().stream().sorted(sortDoubleMap).forEach(r -> fillCSVDouble.accept(r, csvPrinter, false));
-
-        // Print winners
-        csvPrinter.printRecord("Winners");
-        StringBuilder stringBuilder = new StringBuilder(winners[0]);
-        IntStream.range(1, round).forEach(n -> stringBuilder.append(", ").append(winners[n]));
-        csvPrinter.printRecord(stringBuilder);
     }
 
 
@@ -229,10 +227,6 @@ public class QueryClient {
             e.printStackTrace();
         }
     };
-
-    private static final Comparator<Map.Entry<String, Double>> sortDoubleMap = Map.Entry.<String, Double>comparingByValue().thenComparing(Map.Entry.comparingByKey());
-    private static final Comparator<Map.Entry<String, Integer>> sortIntegerMap = Map.Entry.<String, Integer>comparingByValue().thenComparing(Map.Entry.comparingByKey());
-
 
 
 }

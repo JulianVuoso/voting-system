@@ -8,22 +8,11 @@ public class STAR extends Result {
     private Map<String, Integer> firstRound;
     private Map<String, Double> secondRound;
 
-    public STAR(Map<String, Integer> firstRound, Map<String, Double> secondRound) {
-        this.firstRound = firstRound;
-        this.secondRound = secondRound;
-        this.winner[0] = Collections.max(secondRound.entrySet(), Comparator.comparingDouble(Map.Entry::getValue)).getKey();
-        this.partial= false;
-        this.type = Type.STAR;
-    }
 
     public STAR(List<Vote> voteList) {
         this.firstRound = firstSTAR(voteList);
         this.secondRound = secondSTAR(voteList);
-        this.winner[0] = Collections.max(secondRound.entrySet(),
-                (o1, o2) -> {
-                    int compare = Double.compare(o1.getValue(), o2.getValue());
-                    return (compare != 0) ? compare : o2.getKey().compareTo(o1.getKey());
-                }).getKey();
+        this.winner[0] = Collections.max(secondRound.entrySet(), sortDoubleMap).getKey();
         this.partial= false;
         this.type = Type.STAR;
     }
@@ -60,10 +49,7 @@ public class STAR extends Result {
         Map<String, Integer> points = new HashMap<>();
 
         final String[] winners = firstRound.entrySet().stream()
-                .sorted((o1, o2) -> {
-                    int compare = Integer.compare(o2.getValue(), o1.getValue());
-                    return (compare != 0) ? compare : o1.getKey().compareTo(o2.getKey());
-                })
+                .sorted(sortIntegerMap)
                 .limit(2)
                 .map(Map.Entry::getKey)
                 .toArray(String[]::new);

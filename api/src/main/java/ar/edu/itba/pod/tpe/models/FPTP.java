@@ -56,12 +56,7 @@ public class FPTP extends Result {
      * @return The winner.
      */
     private String calculateWinner() {
-        return Collections.max(map.entrySet(),
-                (o1, o2) -> {
-                    if (!o1.getValue().equals(o2.getValue()))
-                        return Integer.compare(o2.getValue(), o1.getValue());
-                    return o1.getKey().compareTo(o2.getKey());
-                }).getKey();
+        return Collections.max(map.entrySet(), sortIntegerMap).getKey();
     }
 
     /**
