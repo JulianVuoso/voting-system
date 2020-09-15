@@ -166,7 +166,7 @@ public class ElectionServiceImpl implements ManagementService,
     public Result askState(String state) throws RemoteException, QueryException {
         if(status == Status.UNDEFINED)
             throw new QueryException("Polls already closed");
-        if(votes.get(state).values().isEmpty())
+        if(votes.get(state) == null || votes.get(state).values().isEmpty())
             throw new QueryException("No Votes");
 
         switch (status) {
@@ -213,7 +213,7 @@ public class ElectionServiceImpl implements ManagementService,
 
     private boolean emptyTable(Integer table){
         for(Map<Integer, List<Vote>> maps : votes.values()){
-            if(!maps.get(table).isEmpty())
+            if(maps.get(table)!= null && !maps.get(table).isEmpty())
                 return false;
         }
         return true;

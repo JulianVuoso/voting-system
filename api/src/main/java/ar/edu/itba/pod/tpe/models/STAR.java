@@ -91,7 +91,7 @@ public class STAR extends Result {
                 }
             }
         }
-        int total = points.get(winners[0]) + points.get(winners[1]);
+        int total = points.getOrDefault(winners[0], 0) + points.getOrDefault(winners[1], 0);
         secondStar.put(winners[0], points.get(winners[0]).doubleValue() / total * 100);
         secondStar.put(winners[1], 100 - secondStar.get(winners[0]));
 
