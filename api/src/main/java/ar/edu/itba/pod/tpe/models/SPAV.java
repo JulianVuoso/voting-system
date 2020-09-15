@@ -56,44 +56,28 @@ public class SPAV extends Result {
      */
     private Map<String, Double> fillRound(List<Vote> voteList) {
         Map<String, Double> roundMap = new HashMap<>();
-
-        // For each vote
-        for(Vote vote : voteList) {
-            // Get its party -> score
-            Map<String, Double> mapVote = processVote(vote.getScoreMap());
-            mapVote.forEach((k, v) -> roundMap.merge(k, v, Double::sum));
-        }
+        voteList.forEach(vote -> processVote(vote.getScoreMap().keySet())
+                        .forEach((key, val) -> roundMap.merge(key, val, Double::sum))); // This is for each key-value pair returned
         return roundMap;
     }
 
     /**
      * Process the vote according to the previous winners.
-     * @param scoreMap The vote score map.
+     * @param votedParties The parties that obtained at least a 1.
      * @return
      */
-    private Map<String, Double> processVote(Map<String, Integer> scoreMap) {
+    private Map<String, Double> processVote(Set<String> votedParties) {
         // When there is no previous winners, all votes are taken into account
         if (winners.length == 0) {
-            return scoreMap.keySet().stream().collect(Collectors.toMap(party -> party, party -> 1d, (a, b) -> b));
+            return votedParties.stream().collect(Collectors.toMap(party -> party, party -> 1d));
         }
-
-        Map<String, Double> results = new HashMap<>();
-        Set<String> parties = new HashSet<>(scoreMap.keySet());
 
         // There were already winners on previous rounds. Remove those from parties.
-        int winnersMatching = 1;
-        for(String w : winners) {
-            if(scoreMap.containsKey(w)) {
-                winnersMatching++;
-                parties.remove(w);
-            }
-        }
+        Set<String> parties = new HashSet<>(votedParties);
+        parties.removeAll(new HashSet<>(Arrays.asList(winners)));
 
         // Add parties and respective points without counting the previous winners
-        for (String party : parties) {
-            results.put(party, 1.0 / winnersMatching);
-        }
-        return results;
+        return parties.stream().collect(Collectors.toMap(party -> party, party -> 1.0 / (votedParties.size() - parties.size() + 1)));
     }
 
     /**
