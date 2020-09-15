@@ -34,7 +34,7 @@ public class QueryTest {
             service.askNational();      // Ask for national results without opening polls
         }
         catch (QueryException qe){
-            assertEquals("Polls already closed", qe.getMessage());
+            assertEquals("Polls not open", qe.getMessage());
             throw qe;
         }
     }
@@ -84,7 +84,7 @@ public class QueryTest {
     }
 
     @Test
-    public final void testAskNationalOpen() throws IllegalElectionStateException, RemoteException, ManagementException{
+    public final void testAskNationalOpen() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 
@@ -95,13 +95,13 @@ public class QueryTest {
         service.vote(new Vote(VOTING_TABLE_1,VOTING_STATE_1,testMap,PARTY_1));      // apply 4 BUFFALO votes
         service.vote(new Vote(VOTING_TABLE_1,VOTING_STATE_1,testMap2,PARTY_2));     // apply 2 OWL votes
         FPTP results = (FPTP) service.askNational();
-        assertEquals(1, results.getMap().get(PARTY_1).intValue());         // verify 1 votes
-        assertEquals(1, results.getMap().get(PARTY_2).intValue());         // verify 1 votes
+        assertEquals(50, results.getPercentagesMap().get(PARTY_1).intValue());         // verify 50% votes
+        assertEquals(50, results.getPercentagesMap().get(PARTY_2).intValue());         // verify 50% votes
         service.close();
     }
 
     @Test
-    public final void testAskNationalClosed() throws IllegalElectionStateException, RemoteException, ManagementException{
+    public final void testAskNationalClosed() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1, 4);                                                    // distribute votes type 1
         testMap.put(PARTY_2, 2);
@@ -122,13 +122,13 @@ public class QueryTest {
         service.close();
 
         STAR results = (STAR) service.askNational();
-        assertEquals(24, results.getFirstRound().get(PARTY_1).intValue());  // verify 24 total votes on BUFFALO
-        assertEquals(20, results.getFirstRound().get(PARTY_2).intValue());  // verify 20 total votes on OWL
-        assertEquals(PARTY_1, results.getWinner());                                  // verify final winner -> BUFFALO
+        assertEquals(24, results.getFirstStage().get(PARTY_1).intValue());   // verify 24 total votes on BUFFALO
+        assertEquals(20, results.getFirstStage().get(PARTY_2).intValue());  // verify 28 total votes on OWL
+        assertEquals(PARTY_1, results.getWinner());                                   // verify final winner -> BUFFALO
     }
 
     @Test
-    public final void testAskStateOpen() throws IllegalElectionStateException, RemoteException, ManagementException{
+    public final void testAskStateOpen() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 
@@ -139,13 +139,13 @@ public class QueryTest {
         service.vote(new Vote(VOTING_TABLE_1,VOTING_STATE_1,testMap,PARTY_1));                          // apply votes on state 1
         service.vote(new Vote(VOTING_TABLE_1,VOTING_STATE_2,testMap2,PARTY_2));                         // apply votes on state 2
         FPTP results = (FPTP) service.askState(VOTING_STATE_1);                                         // ask for state 1 votes
-        assertEquals(1, results.getMap().get(PARTY_1).intValue());                             // verify party 1 get 1 vote
-        assertEquals(0, results.getMap().getOrDefault(PARTY_2, 0).intValue());      // verify party 2 get 0 votes
+        assertEquals(100, results.getPercentagesMap().get(PARTY_1).intValue());                             // verify party 1 get 100% votes
+        assertEquals(0, results.getPercentagesMap().getOrDefault(PARTY_2, 0.0).intValue());      // verify party 2 get 0% votes
         service.close();
     }
 
     @Test
-    public final void testAskStateClosed() throws IllegalElectionStateException, RemoteException, ManagementException{
+    public final void testAskStateClosed() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1, 4);
         testMap.put(PARTY_2, 2);
@@ -176,7 +176,7 @@ public class QueryTest {
     }
 
     @Test
-    public final void testAskTable() throws IllegalElectionStateException, RemoteException, ManagementException{
+    public final void testAskTable() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 
@@ -186,15 +186,18 @@ public class QueryTest {
         service.open();
 
         service.vote(new Vote(VOTING_TABLE_1,VOTING_STATE_1,testMap,PARTY_1));                          // apply vote 1 on table 1
+        service.vote(new Vote(VOTING_TABLE_1,VOTING_STATE_1,testMap,PARTY_1));                          // apply vote 1 on table 1
+        service.vote(new Vote(VOTING_TABLE_1,VOTING_STATE_1,testMap2,PARTY_2));                          // apply vote 1 on table 1
+
         service.vote(new Vote(VOTING_TABLE_2,VOTING_STATE_2,testMap2,PARTY_2));                         // apply vote 2 on table 2
-        FPTP results = (FPTP) service.askTable(VOTING_TABLE_2);                                         // ask for table 2
-        assertEquals(0, results.getMap().getOrDefault(PARTY_1, 0).intValue());      // verify no votes for party 1 on table 2
-        assertEquals(1, results.getMap().get(PARTY_2).intValue());                             // verify 2 votes for party 2 on table 2
+        FPTP results = (FPTP) service.askTable(VOTING_TABLE_1);                                         // ask for table 2
+        assertEquals(66, results.getPercentagesMap().getOrDefault(PARTY_1, 0.0).intValue());      // verify no votes for party 1 on table 2
+        assertEquals(33, results.getPercentagesMap().getOrDefault(PARTY_2, 0.0).intValue());      // verify 2 votes for party 2 on table 2
         service.close();
 
-        FPTP results2 = (FPTP) service.askTable(VOTING_TABLE_2);                                        // same process after closing polls
-        assertEquals(0, results2.getMap().getOrDefault(PARTY_1, 0).intValue());
-        assertEquals(1, results2.getMap().get(PARTY_2).intValue());
+        FPTP results2 = (FPTP) service.askTable(VOTING_TABLE_1);                                        // same process after closing polls
+        assertEquals(66, results2.getPercentagesMap().getOrDefault(PARTY_1, 0.0).intValue());
+        assertEquals(33, results2.getPercentagesMap().getOrDefault(PARTY_2, 0.0).intValue());
     }
 
 }

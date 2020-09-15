@@ -52,7 +52,7 @@ public class ManagementTest {
 
     @Test
     public final void testUndefinedStatus() throws RemoteException{
-        assertEquals(UNDEFINED,service.status());
+        assertEquals(REGISTRATION,service.status());
     }
 
     @Test(expected = ManagementException.class)

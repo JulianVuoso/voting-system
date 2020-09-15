@@ -22,6 +22,7 @@ public class VotingTest {
     private static final String VOTING_STATE = "JUNGLE";
     private static final String PARTY = "BUFFALO";
     private static final int VOTES = 100;
+    private static final int SLEEP_TIME = 1000;
 
 
     private ElectionServiceImpl service;
@@ -68,7 +69,7 @@ public class VotingTest {
     }
 
     @Test
-    public final void testVote() throws IllegalElectionStateException, RemoteException, ManagementException{
+    public final void testVote() throws IllegalElectionStateException, RemoteException, ManagementException, InterruptedException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY,4);
 
@@ -79,12 +80,12 @@ public class VotingTest {
 
         service.close();
         assertEquals(1, registerCounter.get());
+        Thread.sleep(SLEEP_TIME);
         assertTrue(electionFinished);
-
     }
 
     @Test
-    public final void testMultipleVotes() throws IllegalElectionStateException, RemoteException, ManagementException{
+    public final void testMultipleVotes() throws IllegalElectionStateException, RemoteException, ManagementException, InterruptedException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY,4);
 
@@ -97,6 +98,8 @@ public class VotingTest {
         }
 
         service.close();
+        Thread.sleep(SLEEP_TIME);
+
         assertEquals(VOTES, registerCounter.get());
         assertTrue(electionFinished);
 
