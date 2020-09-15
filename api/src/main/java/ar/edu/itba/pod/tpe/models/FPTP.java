@@ -62,6 +62,10 @@ public class FPTP extends Result {
         return winners[0];
     }
 
+    /**
+     * Checks if there are any votes.
+     * @return Boolean if its empty or not.
+     */
     public synchronized boolean isEmpty() {
         return total == 0;
     }
