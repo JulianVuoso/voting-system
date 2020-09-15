@@ -1,8 +1,7 @@
 package ar.edu.itba.pod.tpe.server;
 
-import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
-import ar.edu.itba.pod.tpe.exceptions.QueryException;
+import ar.edu.itba.pod.tpe.exceptions.NoVotesException;
 import ar.edu.itba.pod.tpe.interfaces.*;
 import ar.edu.itba.pod.tpe.models.*;
 import ar.edu.itba.pod.tpe.server.utils.Pair;
@@ -47,10 +46,10 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
      **/
 
     @Override
-    public Status open() throws RemoteException, ManagementException {
+    public Status open() throws RemoteException, IllegalElectionStateException {
         switch (status) {
-            case CLOSE: throw new ManagementException("the poll is already closed");
-            case OPEN: throw new ManagementException("the poll is already open");
+            case CLOSE: throw new IllegalElectionStateException("the poll is already closed");
+            case OPEN: throw new IllegalElectionStateException("the poll is already open");
             default: status = Status.OPEN;
         }
         logger.info("Election started");
@@ -58,12 +57,12 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     }
 
     @Override
-    public Status close() throws RemoteException, ManagementException {
+    public Status close() throws RemoteException, IllegalElectionStateException {
         // TODO: REVISAR COMO voteLock puede ser FIFO
         synchronized (voteLock) {
             switch (status) {
-                case REGISTRATION: throw new ManagementException("the poll has not been opened yet");
-                case CLOSE: throw new ManagementException("the poll is already close");
+                case REGISTRATION: throw new IllegalElectionStateException("the poll has not been opened yet");
+                case CLOSE: throw new IllegalElectionStateException("the poll is already close");
                 default: status = Status.CLOSE;
             }
         }
@@ -110,7 +109,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     public void vote(Vote vote) throws RemoteException, IllegalElectionStateException {
         synchronized (voteLock) {
             if (status != Status.OPEN) {
-                throw new IllegalElectionStateException("Vote it is only permitted while the election is open");
+                throw new IllegalElectionStateException("Voting is only permitted while the election is open");
             }
             votes.addVote(vote);
 
@@ -135,19 +134,19 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
      **/
 
     @Override
-    public Result askNational() throws RemoteException, QueryException {
+    public Result askNational() throws RemoteException, NoVotesException, IllegalElectionStateException {
         if(status == Status.REGISTRATION)
-            throw new QueryException("Polls not open");
+            throw new IllegalElectionStateException("Polls not open");
 
         switch (status) {
             case OPEN:
                 if (nationalCount.isPartialEmpty())
-                    throw new QueryException("No Votes");
+                    throw new NoVotesException("No Votes");
                 return nationalCount.getPartialResult();
             case CLOSE:
                 synchronized (voteLock) {
                     if (votes.isEmpty())
-                        throw new QueryException("No Votes");
+                        throw new NoVotesException("No Votes");
                     nationalCount.setFinal(votes.getVoteList());
                 }
                 return nationalCount;
@@ -156,19 +155,19 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     }
 
     @Override
-    public Result askState(String state) throws RemoteException, QueryException {
+    public Result askState(String state) throws RemoteException, NoVotesException, IllegalElectionStateException {
         if(status == Status.REGISTRATION)
-            throw new QueryException("Polls not open");
+            throw new IllegalElectionStateException("Polls not open");
 
         switch (status) {
             case OPEN:
                 if (!stateMapCount.containsKey(state) || stateMapCount.get(state).isPartialEmpty())
-                    throw new QueryException("No Votes");
+                    throw new NoVotesException("No Votes");
                 return stateMapCount.get(state).getPartialResult();
             case CLOSE:
                 synchronized (voteLock) {
                     if (votes.isStateEmpty(state))
-                        throw new QueryException("No Votes");
+                        throw new NoVotesException("No Votes");
                     stateMapCount.get(state).setFinal(votes.getStateVoteList(state));
                 }
                 return stateMapCount.get(state);
@@ -177,19 +176,19 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     }
 
     @Override
-    public Result askTable(Integer table) throws RemoteException, QueryException {
+    public Result askTable(Integer table) throws RemoteException, NoVotesException, IllegalElectionStateException {
         if(status == Status.REGISTRATION)
-            throw new QueryException("Polls not open");
+            throw new IllegalElectionStateException("Polls not open");
 
         switch (status) {
             case OPEN:
                 if (!tableMapCount.containsKey(table) || tableMapCount.get(table).isEmpty())
-                    throw new QueryException("No Votes");
+                    throw new NoVotesException("No Votes");
                 return tableMapCount.get(table);
             case CLOSE:
                 synchronized (voteLock) {
                     if (votes.isTableEmpty(table))
-                        throw new QueryException("No Votes");
+                        throw new NoVotesException("No Votes");
                     tableMapCount.get(table).setFinal(votes.getTableVoteList(table));
                 }
                 return tableMapCount.get(table);

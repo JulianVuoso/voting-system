@@ -2,7 +2,7 @@ package ar.edu.itba.pod.tpe;
 
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
 import ar.edu.itba.pod.tpe.exceptions.ManagementException;
-import ar.edu.itba.pod.tpe.exceptions.QueryException;
+import ar.edu.itba.pod.tpe.exceptions.NoVotesException;
 
 import ar.edu.itba.pod.tpe.models.*;
 import ar.edu.itba.pod.tpe.server.ElectionServiceImpl;
@@ -28,31 +28,31 @@ public class QueryTest {
         service = new ElectionServiceImpl();
     }
 
-    @Test(expected = QueryException.class)
-    public final void testClosedAsk() throws QueryException, RemoteException {
+    @Test(expected = IllegalElectionStateException.class)
+    public final void testClosedAsk() throws IllegalElectionStateException, NoVotesException, RemoteException {
         try{
             service.askNational();      // Ask for national results without opening polls
         }
-        catch (QueryException qe){
+        catch (IllegalElectionStateException qe){
             assertEquals("Polls not open", qe.getMessage());
             throw qe;
         }
     }
 
-    @Test(expected = QueryException.class)
-    public final void testEmptyNational() throws QueryException, ManagementException, RemoteException {
+    @Test(expected = NoVotesException.class)
+    public final void testEmptyNational() throws NoVotesException, RemoteException, IllegalElectionStateException {
         service.open();
         try{
             service.askNational();      // Ask for national results without any voting
         }
-        catch (QueryException qe){
+        catch (NoVotesException qe){
             assertEquals("No Votes", qe.getMessage());
             throw qe;
         }
     }
 
-    @Test(expected = QueryException.class)
-    public final void testEmptyState() throws QueryException, ManagementException, RemoteException, IllegalElectionStateException {
+    @Test(expected = NoVotesException.class)
+    public final void testEmptyState() throws NoVotesException, RemoteException, IllegalElectionStateException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 
@@ -61,14 +61,14 @@ public class QueryTest {
         try{
             service.askState(VOTING_STATE_2);       // Ask for SAVANNAH results after voting only on JUNGLE state
         }
-        catch (QueryException qe){
+        catch (NoVotesException qe){
             assertEquals("No Votes", qe.getMessage());
             throw qe;
         }
     }
 
-    @Test(expected = QueryException.class)
-    public final void testEmptyTable() throws QueryException, ManagementException, RemoteException, IllegalElectionStateException {
+    @Test(expected = NoVotesException.class)
+    public final void testEmptyTable() throws NoVotesException, RemoteException, IllegalElectionStateException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 
@@ -77,14 +77,14 @@ public class QueryTest {
         try{
             service.askTable(VOTING_TABLE_2);       // Ask for SAVANNAH results after voting only on JUNGLE state
         }
-        catch (QueryException qe){
+        catch (NoVotesException qe){
             assertEquals("No Votes", qe.getMessage());
             throw qe;
         }
     }
 
     @Test
-    public final void testAskNationalOpen() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
+    public final void testAskNationalOpen() throws IllegalElectionStateException, RemoteException, NoVotesException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 
@@ -101,7 +101,7 @@ public class QueryTest {
     }
 
     @Test
-    public final void testAskNationalClosed() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
+    public final void testAskNationalClosed() throws IllegalElectionStateException, RemoteException, NoVotesException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1, 4);                                                    // distribute votes type 1
         testMap.put(PARTY_2, 2);
@@ -128,7 +128,7 @@ public class QueryTest {
     }
 
     @Test
-    public final void testAskStateOpen() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
+    public final void testAskStateOpen() throws IllegalElectionStateException, RemoteException, NoVotesException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 
@@ -145,7 +145,7 @@ public class QueryTest {
     }
 
     @Test
-    public final void testAskStateClosed() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
+    public final void testAskStateClosed() throws IllegalElectionStateException, RemoteException, ManagementException, NoVotesException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1, 4);
         testMap.put(PARTY_2, 2);
@@ -176,7 +176,7 @@ public class QueryTest {
     }
 
     @Test
-    public final void testAskTable() throws IllegalElectionStateException, RemoteException, ManagementException, QueryException {
+    public final void testAskTable() throws IllegalElectionStateException, RemoteException, ManagementException, NoVotesException {
         Map<String, Integer> testMap = new HashMap<>();
         testMap.put(PARTY_1,4);
 

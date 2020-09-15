@@ -1,7 +1,6 @@
 package ar.edu.itba.pod.tpe;
 
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
-import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.interfaces.VoteAvailableCallbackHandler;
 import ar.edu.itba.pod.tpe.models.Vote;
 import ar.edu.itba.pod.tpe.server.ElectionServiceImpl;
@@ -61,7 +60,7 @@ public class InspectionTest {
     }
 
     @Test(expected = IllegalElectionStateException.class)
-    public final void testInspectAfterOpen() throws RemoteException, ManagementException, IllegalElectionStateException {
+    public final void testInspectAfterOpen() throws RemoteException, IllegalElectionStateException {
         // Open Elections
         service.open();
 
@@ -70,7 +69,7 @@ public class InspectionTest {
     }
 
     @Test(expected = IllegalElectionStateException.class)
-    public final void testInspectAfterClose() throws RemoteException, ManagementException, IllegalElectionStateException {
+    public final void testInspectAfterClose() throws RemoteException, IllegalElectionStateException {
         // Open Elections
         service.open();
         // Close Elections
@@ -81,7 +80,7 @@ public class InspectionTest {
     }
 
     @Test
-    public final void testInspectBeforeOpen() throws RemoteException, ManagementException, IllegalElectionStateException {
+    public final void testInspectBeforeOpen() throws RemoteException, IllegalElectionStateException {
         // Inspect
         service.inspect(INSPECTION_TABLE, INSPECTION_PARTY, handler);
 
@@ -90,7 +89,7 @@ public class InspectionTest {
     }
 
     @Test
-    public final void testElectionFinished() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
+    public final void testElectionFinished() throws RemoteException, IllegalElectionStateException, InterruptedException {
         // Inspect
         service.inspect(INSPECTION_TABLE, INSPECTION_PARTY, handler);
 
@@ -107,7 +106,7 @@ public class InspectionTest {
     }
 
     @Test
-    public final void testVoteType() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
+    public final void testVoteType() throws RemoteException, IllegalElectionStateException, InterruptedException {
         final Map<String, Integer> starMap = new HashMap<>();
         starMap.put(INSPECTION_PARTY, 2);
 
@@ -133,7 +132,7 @@ public class InspectionTest {
     }
 
     @Test
-    public final void testVoteCount() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
+    public final void testVoteCount() throws RemoteException, IllegalElectionStateException, InterruptedException {
         final Map<String, Integer> starMap = new HashMap<>();
         starMap.put(OTHER_PARTY, 2);
 
@@ -158,7 +157,7 @@ public class InspectionTest {
     }
 
     @Test
-    public final void testVoteParty() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
+    public final void testVoteParty() throws RemoteException, IllegalElectionStateException, InterruptedException {
         final Map<String, Integer> starMap = new HashMap<>();
         starMap.put(OTHER_PARTY, 2);
 
@@ -186,7 +185,7 @@ public class InspectionTest {
     }
 
     @Test
-    public final void testVoteTable() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
+    public final void testVoteTable() throws RemoteException, IllegalElectionStateException, InterruptedException {
         final Map<String, Integer> starMap = new HashMap<>();
         starMap.put(OTHER_PARTY, 2);
 
@@ -214,7 +213,7 @@ public class InspectionTest {
     }
 
     @Test
-    public final void testMultipleInspectorsSameParams() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
+    public final void testMultipleInspectorsSameParams() throws RemoteException, IllegalElectionStateException, InterruptedException {
         final Map<String, Integer> starMap = new HashMap<>();
         starMap.put(OTHER_PARTY, 2);
 
@@ -240,7 +239,7 @@ public class InspectionTest {
     }
 
     @Test
-    public final void testMultipleInspectorsDifferentParams() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
+    public final void testMultipleInspectorsDifferentParams() throws RemoteException, IllegalElectionStateException, InterruptedException {
         final Map<String, Integer> starMap = new HashMap<>();
         starMap.put(OTHER_PARTY, 2);
 
@@ -267,7 +266,7 @@ public class InspectionTest {
 
     // The following test is not 100% fail proof, but should fail sometimes if no synchronization is implemented
     @Test
-    public final void testInspectSync() throws RemoteException, ManagementException, IllegalElectionStateException, InterruptedException {
+    public final void testInspectSync() throws RemoteException, IllegalElectionStateException, InterruptedException {
         final Map<String, Integer> starMap = new HashMap<>();
         starMap.put(OTHER_PARTY, 2);
 
