@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
@@ -97,11 +98,8 @@ public class QueryClient {
      * @param printFunction Print function to be applied.
      */
     private static void genericFunction(String file, Result result, ThrowableBiConsumer<Result, CSVPrinter, IOException> printFunction) {
-        try {
-            // Opens csv printer
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(file));
-            final CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.newFormat(';')
-                    .withRecordSeparator('\n'));
+        try (final CSVPrinter csvPrinter = new CSVPrinter(new FileWriter(file), CSVFormat.newFormat(';')
+                .withRecordSeparator('\n'))) {
 
             // Applies function to result and writes on the csv
             if (result.isPartial())
