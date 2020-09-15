@@ -134,7 +134,7 @@ public class STAR extends Result {
         }
 
         // Calculate total of votes
-        int total = points.get(winners[0]) + points.get(winners[1]);
+        int total = points.getOrDefault(winners[0], 0) + points.getOrDefault(winners[1], 0);
 
         // Return created map with percentages of the winners
         Map<String, Double> secondStageResults = new HashMap<>();
