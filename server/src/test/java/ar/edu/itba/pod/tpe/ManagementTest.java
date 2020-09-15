@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.tpe;
 
+import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
 import ar.edu.itba.pod.tpe.exceptions.ManagementException;
 import ar.edu.itba.pod.tpe.server.ElectionServiceImpl;
 import org.junit.Before;
@@ -21,7 +22,7 @@ public class ManagementTest {
     }
 
     @Test
-    public final void testOpenElection() throws ManagementException, RemoteException {
+    public final void testOpenElection() throws IllegalElectionStateException, RemoteException {
 
         service.open();
 
@@ -29,13 +30,13 @@ public class ManagementTest {
 
     }
 
-    @Test(expected = ManagementException.class)
-    public final void testExceptionWhenClose() throws ManagementException, RemoteException {
+    @Test(expected = IllegalElectionStateException.class)
+    public final void testExceptionWhenClose() throws IllegalElectionStateException, RemoteException {
         service.close();
     }
 
     @Test
-    public final void testCloseElection() throws ManagementException, RemoteException {
+    public final void testCloseElection() throws IllegalElectionStateException, RemoteException {
         service.open();
 
         service.close();
@@ -44,8 +45,8 @@ public class ManagementTest {
     }
 
 
-    @Test(expected = ManagementException.class)
-    public final void testDoubleOpenElection() throws ManagementException, RemoteException {
+    @Test(expected = IllegalElectionStateException.class)
+    public final void testDoubleOpenElection() throws IllegalElectionStateException, RemoteException {
         service.open();
         service.open();
     }
@@ -55,8 +56,8 @@ public class ManagementTest {
         assertEquals(REGISTRATION,service.status());
     }
 
-    @Test(expected = ManagementException.class)
-    public final void testDoubleCloseElection()throws ManagementException, RemoteException{
+    @Test(expected = IllegalElectionStateException.class)
+    public final void testDoubleCloseElection()throws IllegalElectionStateException, RemoteException{
 
         service.open();
 
@@ -65,12 +66,12 @@ public class ManagementTest {
     }
 
     @Test
-    public final void testOpenReturnValue() throws ManagementException, RemoteException{
+    public final void testOpenReturnValue() throws IllegalElectionStateException, RemoteException{
         assertEquals(STARTED,service.open());
     }
 
     @Test
-    public final void testCloseReturnValue() throws ManagementException, RemoteException{
+    public final void testCloseReturnValue() throws IllegalElectionStateException, RemoteException{
         service.open();
         assertEquals(ENDED,service.close());
     }
