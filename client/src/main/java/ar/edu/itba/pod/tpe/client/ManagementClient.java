@@ -2,8 +2,7 @@ package ar.edu.itba.pod.tpe.client;
 
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
-import ar.edu.itba.pod.tpe.exceptions.ManagementException;
-import ar.edu.itba.pod.tpe.interfaces.InspectionService;
+import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
 import ar.edu.itba.pod.tpe.interfaces.ManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +64,7 @@ public class ManagementClient {
                 default:
                     System.err.println("Invalid action name, possible options: open, close, state");
             }
-        } catch (ManagementException e) {
+        } catch (IllegalElectionStateException e) {
             System.err.println("Error trying to " + action + ", " + e.getMessage());
             System.exit(ERROR_STATUS);
         } catch (RemoteException e) {

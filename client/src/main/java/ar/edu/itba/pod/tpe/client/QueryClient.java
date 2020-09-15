@@ -4,7 +4,8 @@ import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.client.utils.QuadConsumer;
 import ar.edu.itba.pod.tpe.client.utils.ThrowableBiConsumer;
-import ar.edu.itba.pod.tpe.exceptions.QueryException;
+import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
+import ar.edu.itba.pod.tpe.exceptions.NoVotesException;
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
 import ar.edu.itba.pod.tpe.models.*;
 import org.apache.commons.csv.CSVFormat;
@@ -12,13 +13,10 @@ import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -26,7 +24,6 @@ import java.rmi.registry.Registry;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class QueryClient {
 
@@ -83,7 +80,7 @@ public class QueryClient {
         } catch (NotBoundException e) {
             System.err.println("Server " + QueryService.class.getName() + " has no associated binding.");
             System.exit(ERROR_STATUS);
-        } catch (QueryException e) {
+        } catch (NoVotesException | IllegalElectionStateException e) {
             System.err.println(e.getMessage());
             System.exit(ERROR_STATUS);
         }

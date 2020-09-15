@@ -59,7 +59,7 @@ public class VotingClient {
             List<String> file = Files.readAllLines(Paths.get(path) );
             parseFile(file, service);
         } catch (IllegalElectionStateException e) {
-            System.err.println("Error: " + e);
+            System.err.println(e.getMessage());
             System.exit(ERROR_STATUS);
         } catch (RemoteException e) {
             System.err.println("Remote communication failed.");
