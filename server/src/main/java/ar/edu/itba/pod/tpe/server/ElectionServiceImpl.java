@@ -90,6 +90,8 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
     @Override
     public void inspect(int table, String party, VoteAvailableCallbackHandler handler) throws RemoteException, IllegalElectionStateException {
+        if (handler == null) throw new IllegalArgumentException("Handler cannot be null");
+
         if (status != Status.REGISTRATION) {
             throw new IllegalElectionStateException("It is only possible to register an inspector before the voting starts");
         }
@@ -107,6 +109,8 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
     @Override
     public void vote(Vote vote) throws RemoteException, IllegalElectionStateException {
+        if (vote == null) throw new IllegalArgumentException("Vote cannot be null");
+
         synchronized (voteLock) {
             if (status != Status.OPEN) {
                 throw new IllegalElectionStateException("Voting is only permitted while the election is open");
