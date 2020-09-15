@@ -67,6 +67,7 @@ public class ManagementClient {
             }
         } catch (ManagementException e) {
             System.err.println("Error trying to " + action + ", " + e.getMessage());
+            System.exit(ERROR_STATUS);
         } catch (RemoteException e) {
             System.err.println("Remote communication failed.");
             System.exit(ERROR_STATUS);

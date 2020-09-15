@@ -78,7 +78,7 @@ public class InspectorClient {
             service.inspect(tableNumber, partyName, handler);
             System.out.println("Fiscal of " + partyName + " registered on polling place " + tableNumber);
         } catch (IllegalElectionStateException e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             UnicastRemoteObject.unexportObject(handler, true);
         }
     }

@@ -54,7 +54,7 @@ public class STAR extends Result {
         firstStage = fillFirstStage(votes);
         secondStage = fillSecondStage(votes);
 
-        winners[0] = Collections.max(secondStage.entrySet(), sortDoubleMap).getKey();
+        winners[0] = Collections.min(secondStage.entrySet(), sortDoubleMap).getKey();
     }
 
     /**

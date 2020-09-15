@@ -84,8 +84,8 @@ public class Votes {
      * @param state The state to check.
      * @return True if its empty, false otherwise.
      */
-    public boolean isStateEmpty(String state) { // TODO: should be fixed
-        return votes.containsKey(state);
+    public boolean isStateEmpty(String state) {
+        return !votes.containsKey(state);
     }
 
     /**

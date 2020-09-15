@@ -4,6 +4,7 @@ import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.client.utils.QuadConsumer;
 import ar.edu.itba.pod.tpe.client.utils.ThrowableBiConsumer;
+import ar.edu.itba.pod.tpe.exceptions.QueryException;
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
 import ar.edu.itba.pod.tpe.models.*;
 import org.apache.commons.csv.CSVFormat;
@@ -79,6 +80,9 @@ public class QueryClient {
             System.exit(ERROR_STATUS);
         } catch (NotBoundException e) {
             System.err.println("Server " + QueryService.class.getName() + " has no associated binding.");
+            System.exit(ERROR_STATUS);
+        } catch (QueryException e) {
+            System.err.println(e.getMessage());
             System.exit(ERROR_STATUS);
         }
 
@@ -179,7 +183,7 @@ public class QueryClient {
         for (int i = 0; i < SPAV.maxRounds; i++) {
 
             // Print SPAV approval header
-            printer.printRecord("Round " + i);
+            printer.printRecord("Round " + i + 1);
             printer.printRecord(APPROVAL_HEADER);
             results.getRound(i).entrySet().stream().sorted(Result.sortDoubleMap).forEach(r -> fillCSV.accept(r, printer, "##.00", ""));
 

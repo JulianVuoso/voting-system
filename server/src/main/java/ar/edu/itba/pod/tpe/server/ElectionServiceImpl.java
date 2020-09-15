@@ -158,7 +158,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     @Override
     public Result askState(String state) throws RemoteException, QueryException {
         if(status == Status.REGISTRATION)
-            throw new QueryException("Polls already closed");
+            throw new QueryException("Polls not open");
 
         switch (status) {
             case OPEN:
@@ -179,7 +179,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     @Override
     public Result askTable(Integer table) throws RemoteException, QueryException {
         if(status == Status.REGISTRATION)
-            throw new QueryException("Polls already closed");
+            throw new QueryException("Polls not open");
 
         switch (status) {
             case OPEN:
