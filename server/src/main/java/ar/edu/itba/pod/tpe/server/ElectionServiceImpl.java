@@ -130,16 +130,16 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
             votes.get(state).get(table).add(vote);
         }
 
-        national.addVote(vote.getVoteFPTP());
+        national.addVote(vote.getWinner());
 
         this.state.putIfAbsent(vote.getState(), new FPTP());
-        this.state.get(vote.getState()).addVote(vote.getVoteFPTP());
+        this.state.get(vote.getState()).addVote(vote.getWinner());
 
         this.table.putIfAbsent(vote.getTable(), new FPTP());
-        this.table.get(vote.getTable()).addVote(vote.getVoteFPTP());
+        this.table.get(vote.getTable()).addVote(vote.getWinner());
 
         // Check if there are inspectors registered to that table and FPTP candidate
-        final Pair<String, Integer> inspectLocation = new Pair<>(vote.getVoteFPTP(), vote.getTable());
+        final Pair<String, Integer> inspectLocation = new Pair<>(vote.getWinner(), vote.getTable());
         Optional.ofNullable(inspectorHandlers.get(inspectLocation))
                 .ifPresent(handlerList -> handlerList.forEach(h -> sendNotificationToInspector(h, inspectLocation)));
     }

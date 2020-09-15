@@ -5,7 +5,7 @@ import java.util.Comparator;
 import java.util.Map;
 
 public abstract class Result implements Serializable {
-    String[] winner = new String[3];
+    String[] winners;
     Type type;
     boolean partial;
 

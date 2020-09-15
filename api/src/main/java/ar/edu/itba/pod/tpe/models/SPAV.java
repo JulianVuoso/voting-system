@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.tpe.models;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class SPAV extends Result {
@@ -17,13 +18,13 @@ public class SPAV extends Result {
         partial = false;
         type = Type.SPAV;
         rounds = new ArrayList<>();
+        winners = new String[maxRounds];
 
         IntStream.range(0, maxRounds).forEach(n -> {
             rounds.add(n, fillRound(voteList));
-            winner[n] = calculateWinner(rounds.get(n));
+            winners[n] = calculateWinner(rounds.get(n));
         });
     }
-
 
     /**
      * Gets the corresponding round.
@@ -34,13 +35,12 @@ public class SPAV extends Result {
         return rounds.get(number);
     }
 
-
     /**
      * Gets the SPAV final winners.
      * @return Strings for the SPAV final winners.
      */
     public String[] getWinner(){
-        return winner;
+        return winners;
     }
 
 
@@ -60,12 +60,41 @@ public class SPAV extends Result {
         // For each vote
         for(Vote vote : voteList) {
             // Get its party -> score
-            Map<String, Double> mapVote = vote.getSPAV(this.winner);
-            mapVote.keySet().forEach(party -> roundMap.put(party, roundMap.getOrDefault(party, 0.0) + mapVote.get(party)));
+            Map<String, Double> mapVote = processVote(vote.getScoreMap());
+            mapVote.forEach((k, v) -> roundMap.merge(k, v, Double::sum));
         }
         return roundMap;
     }
 
+    /**
+     * Process the vote according to the previous winners.
+     * @param scoreMap The vote score map.
+     * @return
+     */
+    private Map<String, Double> processVote(Map<String, Integer> scoreMap) {
+        // When there is no previous winners, all votes are taken into account
+        if (winners.length == 0) {
+            return scoreMap.keySet().stream().collect(Collectors.toMap(party -> party, party -> 1d, (a, b) -> b));
+        }
+
+        Map<String, Double> results = new HashMap<>();
+        Set<String> parties = new HashSet<>(scoreMap.keySet());
+
+        // There were already winners on previous rounds. Remove those from parties.
+        int winnersMatching = 1;
+        for(String w : winners) {
+            if(scoreMap.containsKey(w)) {
+                winnersMatching++;
+                parties.remove(w);
+            }
+        }
+
+        // Add parties and respective points without counting the previous winners
+        for (String party : parties) {
+            results.put(party, 1.0 / winnersMatching);
+        }
+        return results;
+    }
 
     /**
      * Calculates the winner for the given round.

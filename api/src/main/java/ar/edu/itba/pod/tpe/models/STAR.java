@@ -12,13 +12,14 @@ public class STAR extends Result {
     public STAR(List<Vote> voteList) {
         this.firstRound = firstSTAR(voteList);
         this.secondRound = secondSTAR(voteList);
-        this.winner[0] = Collections.max(secondRound.entrySet(), sortDoubleMap).getKey();
+        this.winners[0] = Collections.max(secondRound.entrySet(), sortDoubleMap).getKey();
         this.partial= false;
         this.type = Type.STAR;
+        winners = new String[1];
     }
 
     public String getWinner(){
-        return winner[0];
+        return winners[0];
     }
 
      public boolean getPartial() {
@@ -37,8 +38,8 @@ public class STAR extends Result {
     private Map<String, Integer> firstSTAR(List<Vote> voteList) {
         Map<String, Integer> firstStar = new HashMap<>();
         for(Vote vote : voteList){
-            for(String party : vote.getSTAR().keySet()){
-                firstStar.put(party, firstStar.getOrDefault(party, 0) + vote.getSTAR().get(party));
+            for(String party : vote.getScoreMap().keySet()){
+                firstStar.put(party, firstStar.getOrDefault(party, 0) + vote.getScoreMap().get(party));
             }
         }
         return firstStar;
@@ -63,8 +64,8 @@ public class STAR extends Result {
 
         String winnerAlpha = winners[0].compareTo(winners[1]) < 0 ? winners[0]:winners[1];
         for(Vote vote : voteList) {
-            int firstVotes = vote.getSTAR().getOrDefault(winners[0], 0),
-                    secondVotes = vote.getSTAR().getOrDefault(winners[1], 0);
+            int firstVotes = vote.getScoreMap().getOrDefault(winners[0], 0),
+                    secondVotes = vote.getScoreMap().getOrDefault(winners[1], 0);
 
             // Si ambos sumaron 0, se descarta la boleta
             if (firstVotes != 0 || secondVotes != 0) {
