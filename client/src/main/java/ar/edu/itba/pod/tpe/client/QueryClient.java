@@ -4,8 +4,6 @@ import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.client.utils.QuadConsumer;
 import ar.edu.itba.pod.tpe.client.utils.ThrowableBiConsumer;
-import ar.edu.itba.pod.tpe.client.utils.TriConsumer;
-import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.QueryService;
 import ar.edu.itba.pod.tpe.models.*;
 import org.apache.commons.csv.CSVFormat;
@@ -25,7 +23,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 public class QueryClient {
@@ -54,7 +51,7 @@ public class QueryClient {
     private static final String SCORE_HEADER = "Score;Party";
 
 
-    public static void main(String[] args) throws RemoteException, NotBoundException {
+    public static void main(String[] args) {
         logger.info("tpe1-g6 Query Client Starting ...");
 
         try {
@@ -81,7 +78,7 @@ public class QueryClient {
             System.err.println("Remote communication failed.");
             System.exit(ERROR_STATUS);
         } catch (NotBoundException e) {
-            System.err.println("Server " + QueryClient.class.getName() + " has no associated binding.");
+            System.err.println("Server " + QueryService.class.getName() + " has no associated binding.");
             System.exit(ERROR_STATUS);
         }
 

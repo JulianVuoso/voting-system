@@ -2,6 +2,7 @@ package ar.edu.itba.pod.tpe.client;
 
 
 import ar.edu.itba.pod.tpe.exceptions.IllegalElectionStateException;
+import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.VotingService;
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
@@ -38,7 +39,7 @@ public class VotingClient {
     private static String path;
 
 
-    public static void main(String[] args) throws RemoteException, NotBoundException, IllegalElectionStateException {
+    public static void main(String[] args) {
         logger.info("tpe1-g6 Voting Client Starting ...");
 
         try {
@@ -51,15 +52,24 @@ public class VotingClient {
 
         logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + path);
 
-        final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
-        final VotingService service = (VotingService) registry.lookup(VotingService.class.getName());
-
         try {
+            final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
+            final VotingService service = (VotingService) registry.lookup(VotingService.class.getName());
+
             List<String> file = Files.readAllLines(Paths.get(path) );
             parseFile(file, service);
-        }
-        catch (IOException e ){
-            e.printStackTrace();
+        } catch (IllegalElectionStateException e) {
+            System.err.println("Error: " + e);
+            System.exit(ERROR_STATUS);
+        } catch (RemoteException e) {
+            System.err.println("Remote communication failed.");
+            System.exit(ERROR_STATUS);
+        } catch (NotBoundException e) {
+            System.err.println("Server " + VotingService.class.getName() + " has no associated binding.");
+            System.exit(ERROR_STATUS);
+        } catch (IOException e ) {
+            System.err.println("Error opening the file " + path);
+            System.exit(ERROR_STATUS);
         }
 
     }

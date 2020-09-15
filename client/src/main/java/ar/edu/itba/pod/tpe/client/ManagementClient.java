@@ -3,12 +3,15 @@ package ar.edu.itba.pod.tpe.client;
 import ar.edu.itba.pod.tpe.client.exceptions.ArgumentException;
 import ar.edu.itba.pod.tpe.client.utils.ClientUtils;
 import ar.edu.itba.pod.tpe.exceptions.ManagementException;
+import ar.edu.itba.pod.tpe.interfaces.InspectionService;
 import ar.edu.itba.pod.tpe.interfaces.ManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Optional;
@@ -32,7 +35,7 @@ public class ManagementClient {
     private static String action;
 
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         logger.info("tpe1-g6 Administration Client Starting ...");
 
         try {
@@ -45,11 +48,10 @@ public class ManagementClient {
 
         logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + action);
 
-        final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
-        final ManagementService service = (ManagementService) registry.lookup(ManagementService.class.getName());
-
-
         try {
+            final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
+            final ManagementService service = (ManagementService) registry.lookup(ManagementService.class.getName());
+
             switch (action) {
                 case "open":
                     System.out.println("Election " + service.open().toString().toLowerCase());
@@ -65,6 +67,12 @@ public class ManagementClient {
             }
         } catch (ManagementException e) {
             System.err.println("Error trying to " + action + ", " + e.getMessage());
+        } catch (RemoteException e) {
+            System.err.println("Remote communication failed.");
+            System.exit(ERROR_STATUS);
+        } catch (NotBoundException e) {
+            System.err.println("Server " + ManagementService.class.getName() + " has no associated binding.");
+            System.exit(ERROR_STATUS);
         }
     }
 
