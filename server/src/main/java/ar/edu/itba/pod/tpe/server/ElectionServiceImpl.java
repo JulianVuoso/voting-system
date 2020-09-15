@@ -162,7 +162,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
         switch (status) {
             case OPEN:
-                if (stateMapCount.get(state).isPartialEmpty())
+                if (!stateMapCount.containsKey(state) || stateMapCount.get(state).isPartialEmpty())
                     throw new QueryException("No Votes");
                 return stateMapCount.get(state).getPartialResult();
             case CLOSE:
@@ -183,7 +183,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
         switch (status) {
             case OPEN:
-                if (tableMapCount.get(table).isEmpty())
+                if (!tableMapCount.containsKey(table) || tableMapCount.get(table).isEmpty())
                     throw new QueryException("No Votes");
                 return tableMapCount.get(table);
             case CLOSE:
