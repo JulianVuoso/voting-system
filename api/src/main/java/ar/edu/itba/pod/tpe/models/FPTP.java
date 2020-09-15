@@ -27,7 +27,7 @@ public class FPTP extends Result {
      * Adds a vote given the party winner.
      * @param party The required party to add a vote.
      */
-    public void addVote(String party) {
+    public synchronized void addVote(String party) {
         map.put(party, map.getOrDefault(party, 0) + 1);
         total++;
     }
@@ -46,7 +46,7 @@ public class FPTP extends Result {
     /**
      * Sets the the Result to final and calculates the winner.
      */
-    public void setFinal() {
+    public synchronized void setFinal() {
         partial = false;
         winners[0] = Collections.max(map.entrySet(), sortIntegerMap).getKey();
     }

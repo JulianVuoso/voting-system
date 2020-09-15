@@ -6,6 +6,7 @@ import ar.edu.itba.pod.tpe.exceptions.QueryException;
 import ar.edu.itba.pod.tpe.interfaces.*;
 import ar.edu.itba.pod.tpe.models.*;
 import ar.edu.itba.pod.tpe.server.utils.Pair;
+import ar.edu.itba.pod.tpe.server.utils.Votes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +21,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
     private Status status;
 
-    private Map<String, Map<Integer, List<Vote>>> votes;
+    private Votes votes;
 
     private ExecutorService executorService;
 
@@ -40,7 +41,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
         status = Status.REGISTRATION;
         inspectorHandlers = new HashMap<>();
         executorService = Executors.newFixedThreadPool(4);
-        votes = new HashMap<>();
+        votes = new Votes();
 
         // Initialize partial results for national, state and table
         national = new FPTP();
@@ -120,14 +121,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
             if (status != Status.OPEN) {
                 throw new IllegalElectionStateException("Solo se puede votar si los comicios están abiertos");
             }
-
-            if (!votes.containsKey(state)) {
-                votes.put(state, new HashMap<>());
-            }
-            if (!votes.get(state).containsKey(table)) {
-                votes.get(state).put(table, new ArrayList<>());
-            }
-            votes.get(state).get(table).add(vote);
+            votes.addVote(vote);
         }
 
         national.addVote(vote.getWinner());
@@ -152,14 +146,14 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     public Result askNational() throws RemoteException, QueryException {
         if(status == Status.REGISTRATION)
             throw new QueryException("Polls already closed");
-        if(allVotes().isEmpty())
+        if(votes.getVoteList().isEmpty()) // TODO: highly Inefficient
             throw new QueryException("No Votes");
 
         switch (status) {
             case OPEN: return national;
             case CLOSE:
                 if (natStar == null)
-                    natStar = new STAR(allVotes());
+                    natStar = new STAR(votes.getVoteList());
                 return natStar;
             default: return null;
         }
@@ -169,14 +163,14 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     public Result askState(String state) throws RemoteException, QueryException {
         if(status == Status.REGISTRATION)
             throw new QueryException("Polls already closed");
-        if(votes.get(state).values().isEmpty())
+        if(votes.isStateEmpty(state)) // TODO check syncro
             throw new QueryException("No Votes");
 
         switch (status) {
             case OPEN: return this.state.get(state);
             case CLOSE:
                 if (!stateSPAV.containsKey(state))
-                    stateSPAV.put(state, new SPAV(stateVotes(state)));
+                    stateSPAV.put(state, new SPAV(votes.getStateVoteList(state)));
                 return stateSPAV.get(state);
             default: return null;
         }
@@ -186,7 +180,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     public Result askTable(Integer table) throws RemoteException, QueryException {
         if(status == Status.REGISTRATION)
             throw new QueryException("Polls already closed");
-        if(emptyTable(table))
+        if(votes.isTableEmpty(table)) // TODO: check
             throw new QueryException("No Votes");
 
         switch (status) {
@@ -227,27 +221,4 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
         });
     }
 
-    private List<Vote> allVotes(){
-        List<Vote> totalVotes = new ArrayList<>();
-        for(Map<Integer, List<Vote>> vote : votes.values()){
-            for(List<Vote> list : vote.values())
-                totalVotes.addAll(list);
-        }
-        return totalVotes;
-    }
-
-    private List<Vote> stateVotes(String state) {
-        List<Vote> stateVotes = new ArrayList<>();
-        for(List<Vote> list : votes.get(state).values())        // save every state votes and return list
-            stateVotes.addAll(list);
-        return stateVotes;
-    }
-
-    private boolean emptyTable(Integer table){
-        for(Map<Integer, List<Vote>> maps : votes.values()){
-            if(!maps.get(table).isEmpty())
-                return false;
-        }
-        return true;
-    }
 }
