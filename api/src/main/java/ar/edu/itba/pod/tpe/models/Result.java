@@ -7,7 +7,7 @@ import java.util.Map;
 public abstract class Result implements Serializable {
     String[] winners;
     Type type;
-    boolean partial;
+    boolean partial = false;
 
     /**
      * Public comparators for Maps.

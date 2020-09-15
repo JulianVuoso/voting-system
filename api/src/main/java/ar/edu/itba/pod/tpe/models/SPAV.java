@@ -15,7 +15,6 @@ public class SPAV extends Result {
      * @param votes Votes to fill the rounds.
      */
     public SPAV(List<Vote> votes) {
-        partial = false;
         type = Type.SPAV;
         winners = new String[maxRounds];
         rounds = new ArrayList<>();

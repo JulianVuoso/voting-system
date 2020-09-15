@@ -20,19 +20,15 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
     private static Logger logger = LoggerFactory.getLogger(ElectionServiceImpl.class);
 
     private Status status;
-
     private Votes votes;
-
     private ExecutorService executorService;
-
     private Map<Pair<String, Integer>, List<VoteAvailableCallbackHandler>> inspectorHandlers;
-
     private final Object voteLock = "voteLock", inspectorsLock = "inspectorLock", absentLock = "absentLock";
 
     // TODO: check if can merge with final results using Result (maybe moving logic inside FPTP)
-    private FPTP national;
-    private Map<String, FPTP> state;
-    private Map<Integer, FPTP> table;
+    private FPTP nationalCount;
+    private Map<String, FPTP> stateMapCount;
+    private Map<Integer, FPTP> tableMapCount;
 
     private STAR natStar;
     private Map<String, SPAV> stateSPAV;
@@ -44,9 +40,9 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
         votes = new Votes();
 
         // Initialize partial results for national, state and table
-        national = new FPTP();
-        state = new HashMap<>();
-        table = new HashMap<>();
+        nationalCount = new FPTP();
+        stateMapCount = new HashMap<>();
+        tableMapCount = new HashMap<>();
 
         // Initialize final results for national and state
         natStar = null;
@@ -137,13 +133,13 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
         }
 
         synchronized (absentLock) {
-            this.state.putIfAbsent(vote.getState(), new FPTP());
-            this.table.putIfAbsent(vote.getTable(), new FPTP());
+            this.stateMapCount.putIfAbsent(vote.getState(), new FPTP());
+            this.tableMapCount.putIfAbsent(vote.getTable(), new FPTP());
         }
 
-        national.addVote(vote.getWinner());
-        this.state.get(vote.getState()).addVote(vote.getWinner());
-        this.table.get(vote.getTable()).addVote(vote.getWinner());
+        nationalCount.addVote(vote.getWinner());
+        this.stateMapCount.get(vote.getState()).addVote(vote.getWinner());
+        this.tableMapCount.get(vote.getTable()).addVote(vote.getWinner());
     }
 
     /**
@@ -157,9 +153,9 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
         switch (status) {
             case OPEN:
-                if (national.isEmpty())
+                if (nationalCount.isEmpty())
                     throw new QueryException("No Votes");
-                return national;
+                return nationalCount;
             case CLOSE:
                 synchronized (voteLock) {
                     if (votes.isEmpty())
@@ -179,9 +175,9 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
         switch (status) {
             case OPEN:
-                if (this.state.get(state).isEmpty())
+                if (this.stateMapCount.get(state).isEmpty())
                     throw new QueryException("No Votes");
-                return this.state.get(state);
+                return this.stateMapCount.get(state);
             case CLOSE:
                 synchronized (voteLock) {
                     if (votes.isStateEmpty(state))
@@ -201,17 +197,16 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
         switch (status) {
             case OPEN:
-                if (this.table.get(table).isEmpty())
+                if (tableMapCount.get(table).isEmpty())
                     throw new QueryException("No Votes");
-                return this.table.get(table);
+                return tableMapCount.get(table);
             case CLOSE:
                 synchronized (voteLock) {
                     if (votes.isTableEmpty(table))
                         throw new QueryException("No Votes");
-                    // TODO Llamar a votes.getTableVotes(table)
-                    this.table.get(table).setFinal(votes.getVoteList());         //  finished --> Calculates winner and set as final
+                    tableMapCount.get(table).setFinal(votes.getTableVoteList(table));
                 }
-                return this.table.get(table);
+                return tableMapCount.get(table);
             default: return null;
         }
     }

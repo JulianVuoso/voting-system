@@ -14,7 +14,6 @@ public class STAR extends Result {
      * @param votes
      */
     public STAR(List<Vote> votes) {
-        partial= false;
         type = Type.STAR;
         winners = new String[1];
 

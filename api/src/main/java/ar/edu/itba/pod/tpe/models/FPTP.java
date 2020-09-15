@@ -48,9 +48,10 @@ public class FPTP extends Result {
     /**
      * Sets the the Result to final and calculates the winner.
      */
-    // TODO: PISAR LO QUE ESTABA CON VOTES
     public synchronized void setFinal(List<Vote> votes) {
+        if (!partial) return;
         partial = false;
+        map = votes.stream().collect(Collectors.groupingBy(Vote::getWinner, Collectors.reducing(0, e -> 1, Integer::sum)));
         winners[0] = Collections.max(map.entrySet(), sortIntegerMap).getKey();
     }
 
