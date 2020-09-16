@@ -39,8 +39,6 @@ public class VotingClient {
 
 
     public static void main(String[] args) {
-        logger.info("tpe1-g6 Voting Client Starting ...");
-
         try {
             argumentParsing();
         } catch (ArgumentException e) {
@@ -48,8 +46,6 @@ public class VotingClient {
             System.exit(ERROR_STATUS);
             return;
         }
-
-        logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + path);
 
         try {
             final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());

@@ -38,8 +38,6 @@ public class InspectorClient {
 
 
     public static void main(String[] args) {
-        logger.info("tpe1-g6 InspectorClient Starting ...");
-
         try {
             argumentParsing();
         } catch (ArgumentException e) {
@@ -47,8 +45,6 @@ public class InspectorClient {
             System.exit(ERROR_STATUS);
             return;
         }
-
-        logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + tableNumber + " - " + partyName);
 
         try {
             clientInspect();

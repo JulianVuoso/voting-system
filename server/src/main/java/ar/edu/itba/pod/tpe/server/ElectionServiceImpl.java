@@ -52,7 +52,6 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
             case OPEN: throw new IllegalElectionStateException("the poll is already open");
             default: status = Status.OPEN;
         }
-        logger.info("Election started");
         return Status.STARTED;
     }
 
@@ -73,7 +72,6 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
         }
         // Previously submitted tasks are executed, but no new tasks will be accepted
         executorService.shutdown();
-        logger.info("Election finished and all handlers killed");
         return Status.ENDED;
     }
 
@@ -211,7 +209,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
             try {
                 handler.voteRegistered();
             } catch (RemoteException e) {
-                logger.error("Could not send notification to Inspector. Removing it...");
+                System.err.println("Could not send notification to Inspector. Removing it...");
                 synchronized (inspectorsLock) {
                     if (inspectorHandlers.containsKey(inspectLocation))
                         inspectorHandlers.get(inspectLocation).remove(handler);

@@ -35,8 +35,6 @@ public class ManagementClient {
 
 
     public static void main(String[] args) {
-        logger.info("tpe1-g6 Administration Client Starting ...");
-
         try {
             argumentParsing();
         } catch (ArgumentException e) {
@@ -44,8 +42,6 @@ public class ManagementClient {
             System.exit(ERROR_STATUS);
             return;
         }
-
-        logger.debug("Args: " + serverAddress.getHostName() + " - " + serverAddress.getPort() + " - " + action);
 
         try {
             final Registry registry = LocateRegistry.getRegistry(serverAddress.getHostName(), serverAddress.getPort());
