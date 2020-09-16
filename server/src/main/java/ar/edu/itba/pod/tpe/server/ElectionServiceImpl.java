@@ -58,7 +58,6 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
 
     @Override
     public Status close() throws RemoteException, IllegalElectionStateException {
-        // TODO: REVISAR COMO voteLock puede ser FIFO
         synchronized (voteLock) {
             switch (status) {
                 case REGISTRATION: throw new IllegalElectionStateException("the poll has not been opened yet");

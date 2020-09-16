@@ -117,7 +117,6 @@ public class STAR extends Result {
         Map<String, Integer> points = new HashMap<>();
         String winnerAlpha = winners[0].compareTo(winners[1]) < 0 ? winners[0]:winners[1];
 
-        // TODO: Ver si se puede mejorar con Java 8
         for(Vote vote : votes) {
             int firstVotes = vote.getScoreMap().getOrDefault(winners[0], 0);
             int secondVotes = vote.getScoreMap().getOrDefault(winners[1], 0);
