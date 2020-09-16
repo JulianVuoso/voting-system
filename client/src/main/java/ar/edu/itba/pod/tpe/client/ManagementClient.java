@@ -53,13 +53,13 @@ public class ManagementClient {
 
             switch (action) {
                 case "open":
-                    System.out.println("Election " + service.open().toString().toLowerCase());
+                    System.out.println("Election " + service.open().getMessage());
                     break;
                 case "close":
-                    System.out.println("Election " + service.close().toString().toLowerCase());
+                    System.out.println("Election " + service.close().getMessage());
                     break;
                 case "state":
-                    System.out.println("Election is " + service.status().toString().toLowerCase());
+                    System.out.println("Election is " + service.status().getMessage());
                     break;
                 default:
                     System.err.println("Invalid action name, possible options: open, close, state");
