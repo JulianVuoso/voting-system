@@ -22,6 +22,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -116,7 +117,7 @@ public class QueryClient {
      */
     private static final QuadConsumer<Map.Entry<String, ? extends Number>, CSVPrinter, String, String> fillCSV = (results, printer, decFormat, symbol) -> {
         String party = results.getKey();
-        DecimalFormat format = new DecimalFormat(decFormat);
+        DecimalFormat format = new DecimalFormat(decFormat, new DecimalFormatSymbols(Locale.ENGLISH));
         String value = format.format(results.getValue()) + symbol;
         try {
             printer.printRecord(value, party);
