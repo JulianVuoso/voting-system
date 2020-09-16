@@ -76,6 +76,7 @@ public class InspectorClient {
         } catch (IllegalElectionStateException e) {
             System.err.println(e.getMessage());
             UnicastRemoteObject.unexportObject(handler, true);
+            System.exit(ERROR_STATUS);
         }
     }
 

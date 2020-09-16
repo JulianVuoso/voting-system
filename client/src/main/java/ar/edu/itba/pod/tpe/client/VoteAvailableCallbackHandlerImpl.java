@@ -21,7 +21,7 @@ public class VoteAvailableCallbackHandlerImpl implements VoteAvailableCallbackHa
 
     @Override
     public void electionFinished() throws RemoteException {
-        System.out.println("Election finished, exiting...");
+//        System.out.println("Election finished, exiting...");
         UnicastRemoteObject.unexportObject(this, true);
     }
 }

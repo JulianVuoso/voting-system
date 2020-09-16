@@ -182,7 +182,7 @@ public class QueryClient {
 
             // Print winners
             printer.printRecord("Winners");
-            printer.printRecord(Arrays.stream(results.getWinner()).limit(i + 1).collect(Collectors.joining(", ")));
+            printer.printRecord(Arrays.stream(results.getWinner()).limit(i + 1).collect(Collectors.joining(",")));
         }
     };
 

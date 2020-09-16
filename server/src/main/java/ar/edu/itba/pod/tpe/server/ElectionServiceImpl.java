@@ -60,7 +60,7 @@ public class ElectionServiceImpl implements ManagementService, InspectionService
         synchronized (voteLock) {
             switch (status) {
                 case REGISTRATION: throw new IllegalElectionStateException("the poll has not been opened yet");
-                case CLOSE: throw new IllegalElectionStateException("the poll is already close");
+                case CLOSE: throw new IllegalElectionStateException("the poll is already closed");
                 default: status = Status.CLOSE;
             }
         }

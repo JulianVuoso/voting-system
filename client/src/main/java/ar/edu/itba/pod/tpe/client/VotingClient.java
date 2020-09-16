@@ -88,7 +88,7 @@ public class VotingClient {
             service.vote(new Vote(Integer.valueOf(parse[0]), parse[1], votes, parse[3]));
         }
 
-        System.out.println("\n" + file.size() + " votes registered");
+        System.out.println(file.size() + " votes registered");
     }
 
 
@@ -116,7 +116,7 @@ public class VotingClient {
      * -DvotesPath=fileName                    --> file.csve
      *
      * Parses arguments from terminal
-     * @throws ArgumentException
+     * @throws ArgumentException if wrong args
      */
     private static void argumentParsing() throws ArgumentException {
         Properties properties = System.getProperties();
