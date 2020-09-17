@@ -78,8 +78,9 @@ public class VotingTest {
         service.vote(new Vote(VOTING_TABLE,VOTING_STATE,testMap,PARTY));
 
         service.close();
-        assertEquals(1, registerCounter.get());
         Thread.sleep(SLEEP_TIME);
+
+        assertEquals(1, registerCounter.get());
         assertTrue(electionFinished);
     }
 
